@@ -44,18 +44,9 @@ function Client(socket) {
 // 		socket.broadcast.to(this.id).emit("ex", objectToSend);
 // 	};
 	
-	this.getImage = function(socket, q) {
+	this.getImage = function(q) {
 		var objectToSend = {};
 		objectToSend.q = q;
-		socket.broadcast.to(this.id).emit("ss", objectToSend);
-	};
-	
-	this.getImage2 = function(q) {
-		var objectToSend = {};
-		objectToSend.q = q;
-// 		if(typeof io.sockets.connected[this.id] != "undefined") {
-// 			io.sockets.connected[this.id].broadcast.to(this.id).emit("ss", objectToSend);
-// 		}
 		io.to(this.id).emit("ss", objectToSend);
 	};
 	
@@ -63,15 +54,15 @@ function Client(socket) {
 		io.to(this.id).emit("ping2");
 	}
 	
-// 	this.getImage2 = function(socket, x1, y1, x2, y2, q) {
-// 		var objectToSend = {};
-// 		objectToSend.x1 = x1;
-// 		objectToSend.y1 = y1;
-// 		objectToSend.x2 = x2;
-// 		objectToSend.y2 = y2;
-// 		objectToSend.q = q;
-// 		socket.broadcast.to(this.id).emit("ss2", objectToSend);
-// 	};
+	this.getImage2 = function(x1, y1, x2, y2, q) {
+		var objectToSend = {};
+		objectToSend.x1 = x1;
+		objectToSend.y1 = y1;
+		objectToSend.x2 = x2;
+		objectToSend.y2 = y2;
+		objectToSend.q = q;
+		io.to(this.id).emit("ss2", objectToSend);
+	};
 
 }
 
@@ -109,7 +100,15 @@ function findClientByName(name) {
 		if (index == -1) {return;}
 		var client = clients[index];
 		
-		client.getImage2(quality);
+		client.getImage(quality);
+	}
+
+	function getImageFromUser2(user, x1, y1, x2, y2, quality) {
+		var index = findClientByName(user);
+		if (index == -1) {return;}
+		var client = clients[index];
+		
+		client.getImage2(x1, y1, x2, y2, quality);
 	}
 
 //var numClients = 0;
@@ -211,7 +210,8 @@ io.on('connection', function(socket) {
 		
 		var quality = parseInt(data.quality);
 		quality = (isNaN(quality)) ? 0 : quality;
-		client.getImage(socket, quality);
+		//client.getImageOld(socket, quality);
+    client.getImage(quality);
 	});
 	
 	
@@ -233,9 +233,9 @@ io.on('connection', function(socket) {
 		//console.log(data);
 		//io.emit("controllerState", data);
 		if(controller != null) {
-			if(Math.random() > 0.9) {
+			//if(Math.random() > 0.9) {
 				io.to(controller.id).emit("controllerState", data);
-			}
+			//}
 		}
 	});
 	
@@ -246,7 +246,7 @@ io.on('connection', function(socket) {
 		
 		var quality = parseInt(data.quality);
 		quality = (isNaN(quality)) ? 0 : quality;
-		client.getImage(socket, quality);
+		client.getImage(quality);
 	});
 	
 	socket.on("IamController", function() {
@@ -269,8 +269,59 @@ io.on('connection', function(socket) {
 
 
 
+// 	setInterval(function(){
+// 		var user = "Matt";
+//     var x1 = 255;
+//     var x2 = 1665;
+//     var y1 = 70;
+//     var y2 = 855;
+    
+//     var q = parseInt((Math.random()*80));
+//     //var quality = 14;
+// 		//var quality = parseInt((Math.random()*10));
+//     //var quality = parseInt((Math.random()*80));
+//     var quality = q;
+// 		//getImageFromUser(user, quality);
+//     getImageFromUser2(user, x1, y1, x2, y2, quality);
+// 	}, 100);
+
+
+
 	setInterval(function(){
 		var user = "Matt";
-		var quality = 10;
-		getImageFromUser(user, quality);
+//     var x1 = 255;
+//     var x2 = 1665;
+//     var y1 = 70;
+//     var y2 = 855;
+    
+    var x1 = 255-1920;
+    var x2 = 1665-1920;
+    var y1 = 70;
+    var y2 = 855;
+    
+    var quality = 13;
+    getImageFromUser2(user, x1, y1, x2, y2, quality);
 	}, 150);
+
+function getTime(x) {
+  return Math.pow(x, (3/2)) + 40;
+}
+
+
+
+// function autoGetImage() {
+//   var user = "Matt";
+//   var x1 = 255;
+//   var x2 = 1665;
+//   var y1 = 70;
+//   var y2 = 855;
+
+//   var q = parseInt((Math.random()*50));
+//   var quality = q;
+//   getImageFromUser2(user, x1, y1, x2, y2, quality);
+  
+//   setTimeout(autoGetImage, getTime(q));
+// }
+
+
+//autoGetImage();

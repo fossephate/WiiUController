@@ -14,6 +14,7 @@
 # Custom
 *.db
 full/
+node_modules/
 
 # Build results
 #[Dd]ebug/

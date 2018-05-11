@@ -168,6 +168,55 @@ int main(int argc, char *argv[]) {
 		myClient.socket()->emit("screenshot", encoded_string);
 	}));
 
+	// screenshot with new new parameters:
+	myClient.socket()->on("ss3", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
+
+		printf("recieved ss.\n");
+
+		RECT      rc;
+		GetClientRect(GetDesktopWindow(), &rc);
+
+		int x1 = data->get_map()["x1"]->get_int();
+		int y1 = data->get_map()["y1"]->get_int();
+		int x2 = data->get_map()["x2"]->get_int();
+		int y2 = data->get_map()["y2"]->get_int();
+		int q = data->get_map()["q"]->get_int();
+		int s = data->get_map()["s"]->get_int();
+
+		long width = rc.right;
+		long height = rc.bottom;
+
+		POINT a;
+		POINT b;
+
+		// incase I want to set the compression level but don't know the width and height:
+		if (x1 == -1) {
+			width = rc.right;
+			height = rc.bottom;
+
+			// for high DPI displays:
+			if (width == 1500) {
+				width *= 2;
+				height *= 2;
+			}
+
+			a = { 0, 0 };
+			b = { width, height };
+		} else {
+			a = { x1, y1 };
+			b = { x2, y2 };
+		}
+
+		std::string encoded_string = screenshotToBase64Resize(a, b, q, s);
+
+		myClient.socket()->emit("screenshot", encoded_string);
+	}));
+
+
+	myClient.socket()->on("quit", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
+		exit(0);
+	}));
+
 
 	// Shut Down GDI+
 	//Gdiplus::GdiplusShutdown(m_gdiplusToken);

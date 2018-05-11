@@ -135,6 +135,99 @@ std::string screenshotToBase64(POINT a, POINT b, int compressionLevel = 30) {
 
 
 
+Gdiplus::Bitmap* ResizeClone(Gdiplus::Bitmap *bmp, int width, int height) {
+
+	UINT o_height = bmp->GetHeight();
+	UINT o_width = bmp->GetWidth();
+	INT n_width = width;
+	INT n_height = height;
+	double ratio = ((double)o_width) / ((double)o_height);
+	if (o_width > o_height) {
+		// Resize down by width
+		n_height = ((double)n_width) / ratio;
+	} else {
+		n_width = n_height * ratio;
+	}
+	Gdiplus::Bitmap* newBitmap = new Gdiplus::Bitmap(n_width, n_height, bmp->GetPixelFormat());
+	Gdiplus::Graphics graphics(newBitmap);
+	graphics.DrawImage(bmp, 0, 0, n_width, n_height);
+	return newBitmap;
+}
+
+std::string screenshotToBase64Resize(POINT a, POINT b, int compressionLevel = 30, int scalePercent = 100) {
+
+	int w = b.x - a.x;
+	int h = b.y - a.y;
+
+	//if (w <= 0) return;
+	//if (h <= 0) return;
+
+	HDC     hScreen = GetDC(HWND_DESKTOP);
+	HDC     hDc = CreateCompatibleDC(hScreen);
+	HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);
+	HGDIOBJ old_obj = SelectObject(hDc, hBitmap);
+	BitBlt(hDc, 0, 0, w, h, hScreen, a.x, a.y, SRCCOPY);
+
+	Gdiplus::Bitmap bitmap(hBitmap, NULL);
+	IStream* oStream = NULL;
+	// ?
+	CreateStreamOnHGlobal(NULL, TRUE, (LPSTREAM*)&oStream);
+
+	CLSID clsid;
+	Gdiplus::EncoderParameters encoderParameters;
+	ULONG quality;
+
+
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms533844%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
+
+	// Before we call Image::Save, we must initialize an
+	// EncoderParameters object. The EncoderParameters object
+	// has an array of EncoderParameter objects. In this
+	// case, there is only one EncoderParameter object in the array.
+	// The one EncoderParameter object has an array of values.
+	// In this case, there is only one value (of type ULONG)
+	// in the array. We will let this value vary from 0 to 100.
+	// 0 = greatest compression, 100 = least compression
+
+	encoderParameters.Count = 1;
+	encoderParameters.Parameter[0].Guid = Gdiplus::EncoderQuality;
+	encoderParameters.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
+	encoderParameters.Parameter[0].NumberOfValues = 1;
+
+	quality = compressionLevel;
+	encoderParameters.Parameter[0].Value = &quality;
+
+	GetEncoderClsid(L"image/jpeg", &clsid);  // Function defined elsewhere
+	//bitmap.Save(L"C:\\Users\\Matt\\AppData\\Roaming\\Media\\test.jpg", &clsid, &encoderParameters);
+	// save to oStream instead of file:
+	if (scalePercent == 100) {
+		bitmap.Save(oStream, &clsid, &encoderParameters);
+	} else {
+		Gdiplus::Bitmap *resizedBmp = ResizeClone(&bitmap, (w*scalePercent) / 100, (w*scalePercent) / 100);
+		resizedBmp->Save(oStream, &clsid, &encoderParameters);
+	}
+
+
+	ULARGE_INTEGER ulnSize;
+	LARGE_INTEGER lnOffset;
+	lnOffset.QuadPart = 0;
+	oStream->Seek(lnOffset, STREAM_SEEK_END, &ulnSize);
+	oStream->Seek(lnOffset, STREAM_SEEK_SET, NULL);
+
+	char *pBuff = new char[(unsigned int)ulnSize.QuadPart];
+	ULONG ulBytesRead;
+	oStream->Read(pBuff, (ULONG)ulnSize.QuadPart, &ulBytesRead);
+
+	std::string encoded_string = base64_encode((const unsigned char*)pBuff, ulnSize.QuadPart);
+
+	SelectObject(hDc, old_obj);
+	DeleteDC(hDc);
+	ReleaseDC(HWND_DESKTOP, hScreen);
+	DeleteObject(hBitmap);
+
+	return encoded_string;
+}
+
 //// Get the horizontal and vertical screen sizes in pixel
 //void GetDesktopResolution(int& horizontal, int& vertical) {
 //

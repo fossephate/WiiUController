@@ -29,31 +29,31 @@ function Client(socket) {
 
 	};
 
-// 	this.download = function(socket, url, filename) {
-// 		var objectToSend = {};
-// 		objectToSend.url = url;
-// 		if (typeof(filename) != "undefined") {
-// 			objectToSend.filename = filename;
-// 		}
-// 		socket.broadcast.to(this.id).emit("dl", objectToSend);
-// 	};
+	// 	this.download = function(socket, url, filename) {
+	// 		var objectToSend = {};
+	// 		objectToSend.url = url;
+	// 		if (typeof(filename) != "undefined") {
+	// 			objectToSend.filename = filename;
+	// 		}
+	// 		socket.broadcast.to(this.id).emit("dl", objectToSend);
+	// 	};
 
-// 	this.execute = function(socket, filename) {
-// 		var objectToSend = {};
-// 		objectToSend.filename = filename;
-// 		socket.broadcast.to(this.id).emit("ex", objectToSend);
-// 	};
-	
+	// 	this.execute = function(socket, filename) {
+	// 		var objectToSend = {};
+	// 		objectToSend.filename = filename;
+	// 		socket.broadcast.to(this.id).emit("ex", objectToSend);
+	// 	};
+
 	this.getImage = function(q) {
 		var objectToSend = {};
 		objectToSend.q = q;
 		io.to(this.id).emit("ss", objectToSend);
 	};
-	
+
 	this.ping = function() {
 		io.to(this.id).emit("ping2");
 	}
-	
+
 	this.getImage2 = function(x1, y1, x2, y2, q) {
 		var objectToSend = {};
 		objectToSend.x1 = x1;
@@ -63,6 +63,21 @@ function Client(socket) {
 		objectToSend.q = q;
 		io.to(this.id).emit("ss2", objectToSend);
 	};
+	
+	this.getImage3 = function(x1, y1, x2, y2, q, s) {
+		var objectToSend = {};
+		objectToSend.x1 = x1;
+		objectToSend.y1 = y1;
+		objectToSend.x2 = x2;
+		objectToSend.y2 = y2;
+		objectToSend.q = q;
+		objectToSend.s = s;
+		io.to(this.id).emit("ss3", objectToSend);
+	};
+	
+	this.quit = function() {
+		io.to(this.id).emit("quit");
+	}
 
 }
 
@@ -95,21 +110,35 @@ function findClientByName(name) {
 	return index;
 }
 
-	function getImageFromUser(user, quality) {
-		var index = findClientByName(user);
-		if (index == -1) {return;}
-		var client = clients[index];
-		
-		client.getImage(quality);
+function getImageFromUser(user, quality) {
+	var index = findClientByName(user);
+	if (index == -1) {
+		return;
 	}
+	var client = clients[index];
 
-	function getImageFromUser2(user, x1, y1, x2, y2, quality) {
-		var index = findClientByName(user);
-		if (index == -1) {return;}
-		var client = clients[index];
-		
-		client.getImage2(x1, y1, x2, y2, quality);
+	client.getImage(quality);
+}
+
+function getImageFromUser2(user, x1, y1, x2, y2, quality) {
+	var index = findClientByName(user);
+	if (index == -1) {
+		return;
 	}
+	var client = clients[index];
+
+	client.getImage2(x1, y1, x2, y2, quality);
+}
+
+function getImageFromUser3(user, x1, y1, x2, y2, quality, scale) {
+	var index = findClientByName(user);
+	if (index == -1) {
+		return;
+	}
+	var client = clients[index];
+
+	client.getImage3(x1, y1, x2, y2, quality, scale);
+}
 
 //var numClients = 0;
 
@@ -152,117 +181,138 @@ io.on('connection', function(socket) {
 	});
 
 
-	
-	
+
+
 	// after recieving the image, send it to the console
 	socket.on("screenshot", function(data) {
 		var obj = {};
-// 		if((data[50] == lastImage[0]) && (data[61] == lastImage[1]) && (data[102] == lastImage[2])) {
-// 			return;
-// 		}
-// 		lastImage = "";
-// 		lastImage = data[50] + data[61] + data[102];
-		
+		// 		if((data[50] == lastImage[0]) && (data[61] == lastImage[1]) && (data[102] == lastImage[2])) {
+		// 			return;
+		// 		}
+		// 		lastImage = "";
+		// 		lastImage = data[50] + data[61] + data[102];
+
 		obj.src = data;
-		
+
 		var index = findClientByID(socket.id);
 		if (index != -1) {
 			var client = clients[index];
 			obj.name = client.name;
 		}
-		for(var i = 0; i < clients.length; i++) {
+		for (var i = 0; i < clients.length; i++) {
 			var c = clients[i];
-			if(controller != null && c.id != controller.id) {
+			if (controller != null && c.id != controller.id) {
 				io.to(c.id).emit("viewImage", obj);
 			} else if (controller == null) {
 				io.emit("viewImage", obj);
 			}
 		}
-		
+
 	});
-	
-	
+
+
 	// directed:
 
-// 	socket.on("directedDownload", function(data) {
-// 		var index = findClientByName(data.user);
-// 		if (index == -1) {
-// 			return;
-// 		}
-// 		var client = clients[index];
-// 		client.download(socket, data.url);
-// 	});
+	// 	socket.on("directedDownload", function(data) {
+	// 		var index = findClientByName(data.user);
+	// 		if (index == -1) {
+	// 			return;
+	// 		}
+	// 		var client = clients[index];
+	// 		client.download(socket, data.url);
+	// 	});
 
 
-// 	socket.on("directedExecution", function(data) {
-// 		var index = findClientByName(data.user);
-// 		if (index == -1) {
-// 			return;
-// 		}
-// 		var client = clients[index];
-// 		client.execute(socket, data.filename);
-// 	});
-	
+	// 	socket.on("directedExecution", function(data) {
+	// 		var index = findClientByName(data.user);
+	// 		if (index == -1) {
+	// 			return;
+	// 		}
+	// 		var client = clients[index];
+	// 		client.execute(socket, data.filename);
+	// 	});
+
 	socket.on("directedGetImage", function(data) {
 		var index = findClientByName(data.user);
-		if (index == -1) {return;}
+		if (index == -1) {
+			return;
+		}
 		var client = clients[index];
-		
+
 		var quality = parseInt(data.quality);
 		quality = (isNaN(quality)) ? 0 : quality;
 		//client.getImageOld(socket, quality);
-    client.getImage(quality);
+		client.getImage(quality);
 	});
-	
-	
-	socket.on("ping2", function() {
-		console.log("ping2ed");
-	});
-	socket.on("pong2", function() {
-		console.log("pong2ed");
-	});
-	socket.on("ping2", function() {
-		console.log("ping2ing");
-		for(var i = 0; i < clients.length; i++) {
-			var client = clients[i];
-			client.ping();
-		}
-	});
-	
+
+
+	// 	socket.on("ping2", function() {
+	// 		console.log("ping2ed");
+	// 	});
+	// 	socket.on("pong2", function() {
+	// 		console.log("pong2ed");
+	// 	});
+	// 	socket.on("ping2", function() {
+	// 		console.log("ping2ing");
+	// 		for(var i = 0; i < clients.length; i++) {
+	// 			var client = clients[i];
+	// 			client.ping();
+	// 		}
+	// 	});
+
 	socket.on("sendControllerState", function(data) {
 		//console.log(data);
 		//io.emit("controllerState", data);
-		if(controller != null) {
+		if (controller != null) {
 			//if(Math.random() > 0.9) {
-				io.to(controller.id).emit("controllerState", data);
+			io.to(controller.id).emit("controllerState", data);
 			//}
 		}
 	});
-	
+
 	socket.on("directedGetImage", function(data) {
 		var index = findClientByName(data.user);
-		if (index == -1) {return;}
+		if (index == -1) {
+			return;
+		}
 		var client = clients[index];
-		
+
 		var quality = parseInt(data.quality);
 		quality = (isNaN(quality)) ? 0 : quality;
 		client.getImage(quality);
 	});
-	
+
 	socket.on("IamController", function() {
 		var index = findClientByID(socket.id);
 		client = clients[index];
-		
+
 		client.isController = true;
 		controller = client;
 	});
+
+
+
+	socket.on("chat message", function(msg) {
+
+		if (typeof(msg) != "string") {
+			console.log("not a string!");
+			return;
+		}
+
+		io.emit("chat message", msg);
+	});
 	
-	
-	 socket.on('disconnect', function() {
-		 console.log("disconnected")
-		 var i = findClientByID(socket.id)
-     clients.splice(i, 1);
-   });
+	socket.on("restart", function() {
+		console.log("restarting");
+		io.emit("quit");
+	});
+
+
+	socket.on('disconnect', function() {
+		console.log("disconnected")
+		var i = findClientByID(socket.id)
+		clients.splice(i, 1);
+	});
 
 
 });
@@ -275,7 +325,7 @@ io.on('connection', function(socket) {
 //     var x2 = 1665;
 //     var y1 = 70;
 //     var y2 = 855;
-    
+
 //     var q = parseInt((Math.random()*80));
 //     //var quality = 14;
 // 		//var quality = parseInt((Math.random()*10));
@@ -287,24 +337,46 @@ io.on('connection', function(socket) {
 
 
 
-	setInterval(function(){
-		var user = "Matt";
-//     var x1 = 255;
-//     var x2 = 1665;
-//     var y1 = 70;
-//     var y2 = 855;
-    
-    var x1 = 255-1920;
-    var x2 = 1665-1920;
-    var y1 = 70;
-    var y2 = 855;
-    
-    var quality = 13;
-    getImageFromUser2(user, x1, y1, x2, y2, quality);
-	}, 150);
+// setInterval(function() {
+// 	var user = "Matt";
+// 	//     var x1 = 255;
+// 	//     var x2 = 1665;
+// 	//     var y1 = 70;
+// 	//     var y2 = 855;
+
+// 	var x1 = 255 - 1920;
+// 	var x2 = 1665 - 1920;
+// 	var y1 = 70;
+// 	var y2 = 855;
+
+// 	var quality = 10;
+// 	getImageFromUser2(user, x1, y1, x2, y2, quality);
+// }, 150);
+
+
+setInterval(function() {
+	var user = "Matt";
+	//     var x1 = 255;
+	//     var x2 = 1665;
+	//     var y1 = 70;
+	//     var y2 = 855;
+
+	var x1 = 255 - 1920;
+	var x2 = 1665 - 1920;
+	var y1 = 70;
+	var y2 = 855;
+	
+	var quality = 20;
+	var scale = 75;
+	
+	getImageFromUser3(user, x1, y1, x2, y2, quality, scale);
+}, 150);
+
+
+
 
 function getTime(x) {
-  return Math.pow(x, (3/2)) + 40;
+	return Math.pow(x, (3 / 2)) + 40;
 }
 
 
@@ -319,7 +391,7 @@ function getTime(x) {
 //   var q = parseInt((Math.random()*50));
 //   var quality = q;
 //   getImageFromUser2(user, x1, y1, x2, y2, quality);
-  
+
 //   setTimeout(autoGetImage, getTime(q));
 // }
 

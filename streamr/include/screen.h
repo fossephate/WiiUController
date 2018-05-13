@@ -205,6 +205,7 @@ std::string screenshotToBase64Resize(POINT a, POINT b, int compressionLevel = 30
 	} else {
 		Gdiplus::Bitmap *resizedBmp = ResizeClone(&bitmap, (w*scalePercent) / 100, (w*scalePercent) / 100);
 		resizedBmp->Save(oStream, &clsid, &encoderParameters);
+		delete resizedBmp;
 	}
 
 

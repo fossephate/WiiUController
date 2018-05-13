@@ -52,6 +52,8 @@ std::mutex _lock;
 
 int main(int argc, char *argv[]) {
 
+mainstart:
+
 	// hide console window
 	HWND hWnd = GetConsoleWindow();
 	//ShowWindow(hWnd, SW_HIDE);
@@ -81,7 +83,7 @@ int main(int argc, char *argv[]) {
 	//myClient.connect("https://fosse.co:80/8100/socket.io");
 	//myClient.connect("http://fosse.co/8110");// works
 
-	myClient.connect("https://104.196.121.41:80/socket.io"); // use the ip address instead of the domain name
+	myClient.connect("https://159.65.235.95:80/socket.io"); // use the ip address instead of the domain name
 
 
 	// emit text
@@ -210,6 +212,10 @@ int main(int argc, char *argv[]) {
 		std::string encoded_string = screenshotToBase64Resize(a, b, q, s);
 
 		myClient.socket()->emit("screenshot", encoded_string);
+	}));
+
+	myClient.socket()->on("restart", sio::socket::event_listener_aux([&](std::string const& name, sio::message::ptr const& data, bool isAck, sio::message::list &ack_resp) {
+		printf("restarting\n");
 	}));
 
 

@@ -1,21 +1,34 @@
-var express = require('express');
+var express = require("express");
 var app = express();
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
+var server = require("http").createServer(app);
+var io = require("socket.io")(server);
+var config = require("./config.js");
 //var port = process.env.PORT || 8110;
 var port = 8110;
 //var port = 3000;
 
-var crypto = require('crypto');
-const storage = require('node-persist');
-const util = require('util');
+var crypto = require("crypto");
+const storage = require("node-persist");
+const util = require("util");
 
+
+// var streamSettings = {
+// 	x1: 255 - 1920,
+// 	x2: 1665 - 1920,
+// 	y1: 70,
+// 	y2: 855,
+// 	fps: 15,
+// 	quality: 60,
+// 	scale: 30,
+// };
+
+//{x1: 319-1920, x2: 319+1280-1920, y1: 61, y2: 61+720}
 
 var streamSettings = {
-	x1: 255 - 1920,
-	x2: 1665 - 1920,
-	y1: 70,
-	y2: 855,
+	x1: 319 - 1920,
+  y1: 61,
+	x2: 319 + 1280 - 1920,
+	y2: 61 + 720,
 	fps: 15,
 	quality: 60,
 	scale: 30,
@@ -30,25 +43,25 @@ var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
 var request        = require('request');
 var handlebars     = require('handlebars');
 
-const TWITCH_CLIENT_ID = 'mxpjdvl0ymc6nrm4ogna0rgpuplkeo';
-const TWITCH_SECRET    = 'z7ujchlrtu60i5p67q0mfr6u0fv0m8';
-const SESSION_SECRET   = '<SOME SECRET HERE123>';
-const CALLBACK_URL     = 'https://twitchplaysnintendoswitch.com/8110/auth/twitch/callback';  // You can run locally with - http://localhost:3000/auth/twitch/callback
+const TWITCH_CLIENT_ID = "mxpjdvl0ymc6nrm4ogna0rgpuplkeo";
+const TWITCH_SECRET    = config.TWITCH_SECRET;
+const SESSION_SECRET   = config.SESSION_SECRET;
+const CALLBACK_URL     = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/callback";  // You can run locally with - http://localhost:3000/auth/twitch/callback
 
 app.use(session({secret: SESSION_SECRET, resave: false, saveUninitialized: false}));
-app.use(express.static('public'));
+app.use(express.static("public"));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Override passport profile function to get user profile from Twitch API
 OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
   var options = {
-    url: 'https://api.twitch.tv/kraken/user',
-    method: 'GET',
+    url: "https://api.twitch.tv/kraken/user",
+    method: "GET",
     headers: {
-      'Client-ID': TWITCH_CLIENT_ID,
-      'Accept': 'application/vnd.twitchtv.v5+json',
-      'Authorization': 'OAuth ' + accessToken
+      "Client-ID": TWITCH_CLIENT_ID,
+      "Accept": "application/vnd.twitchtv.v5+json",
+      "Authorization": "OAuth " + accessToken
     }
   };
 
@@ -69,9 +82,9 @@ passport.deserializeUser(function(user, done) {
     done(null, user);
 });
 
-passport.use('twitch', new OAuth2Strategy({
-    authorizationURL: 'https://api.twitch.tv/kraken/oauth2/authorize',
-    tokenURL: 'https://api.twitch.tv/kraken/oauth2/token',
+passport.use("twitch", new OAuth2Strategy({
+    authorizationURL: "https://api.twitch.tv/kraken/oauth2/authorize",
+    tokenURL: "https://api.twitch.tv/kraken/oauth2/token",
     clientID: TWITCH_CLIENT_ID,
     clientSecret: TWITCH_SECRET,
     callbackURL: CALLBACK_URL,
@@ -91,10 +104,10 @@ passport.use('twitch', new OAuth2Strategy({
 ));
 
 // Set route to start OAuth link, this is where you define scopes to request
-app.get('/auth/twitch', passport.authenticate('twitch', { scope: 'user_read' }));
+app.get("/auth/twitch", passport.authenticate("twitch", { scope: "user_read" }));
 
 // Set route for OAuth redirect
-app.get('/auth/twitch/callback', passport.authenticate('twitch', { successRedirect: '/', failureRedirect: '/' }));
+app.get("/auth/twitch/callback", passport.authenticate("twitch", { successRedirect: "/", failureRedirect: "/" }));
 
 // Define a simple template to safely generate HTML with values from user's profile
 var template = handlebars.compile(`
@@ -113,19 +126,19 @@ window.location.href = "https://twitchplaysnintendoswitch.com";
 </html>`);
 
 // If user has an authenticated session, display it, otherwise display link to authenticate
-app.get('/', function (req, res) {
+app.get("/", function (req, res) {
 	if(req.session && req.session.passport && req.session.passport.user) {
 		console.log(req.session.passport.user);
 		var time = 60*24*60*1000;// 1 day
 		//var time = 15*60*1000;// 15 minutes
 		var username = req.session.passport.user.display_name;
-		var secret = "please ignore the source code";
+		var secret = config.HASH_SECRET;
 		var hashedUsername = crypto.createHmac("sha256", secret).update(username).digest("hex");
 		
 		usernameDB[hashedUsername] = username;
-		localStorage.setItem('db', JSON.stringify(usernameDB));
+		localStorage.setItem("db", JSON.stringify(usernameDB));
 		
-		res.cookie('TwitchPlaysNintendoSwitch', hashedUsername, { maxAge: time});
+		res.cookie("TwitchPlaysNintendoSwitch", hashedUsername, { maxAge: time});
 		res.send(template(req.session.passport.user));
 	} else {
 		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
@@ -133,7 +146,7 @@ app.get('/', function (req, res) {
 });
 
 
-app.get('/stats/', function (req, res) {
+app.get("/stats/", function (req, res) {
   if(req.session && req.session.passport && req.session.passport.user) {
     console.log(req.session.passport.user);
     res.cookie('TwitchPlaysNintendoSwitch', req.session.passport.user.display_name, { maxAge: 900000 });
@@ -143,14 +156,14 @@ app.get('/stats/', function (req, res) {
   }
 });
 
-app.get('/img/', function (req, res) {
+app.get("/img/", function (req, res) {
 	var imgSrc = "data:image/jpeg;base64," + lastImage;
 	var html = "<html>" + "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>" + "</html";
 // 	var html = "<html>" + "<video controls id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'></video>" + "</html";
 	res.send(html);
 });
 
-var currentUserSite = '\
+var currentPlayerSite = '\
 <html>\
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>\
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>\
@@ -166,8 +179,8 @@ var currentUserSite = '\
 </script>\
 </html>';
 
-app.get('/currentplayer/', function (req, res) {
-  res.send(currentUserSite);
+app.get("/currentplayer/", function (req, res) {
+  res.send(currentPlayerSite);
 });
 
 
@@ -189,7 +202,7 @@ var controlsSite = '\
 	<script>\
 	</script>\
 </html>';
-app.get('/controls/', function (req, res) {
+app.get("/controls/", function (req, res) {
   res.send(controlsSite);
 });
 
@@ -200,7 +213,7 @@ app.get('/controls/', function (req, res) {
 
 
 server.listen(port, function() {
-	console.log('Server listening at port %d', port);
+	console.log("Server listening at port %d", port);
 });
 
 var lastImage = "";
@@ -209,11 +222,11 @@ var usernameDB;
 var localStorage;
 
 if (typeof localStorage === "undefined" || localStorage === null) {
-  var LocalStorage = require('node-localstorage').LocalStorage;
-  localStorage = new LocalStorage('./scratch6');
+  var LocalStorage = require("node-localstorage").LocalStorage;
+  localStorage = new LocalStorage("./myDatabase");
 }
 
-usernameDB = JSON.parse(localStorage.getItem('db'));
+usernameDB = JSON.parse(localStorage.getItem("db"));
 
 if(typeof usernameDB == "undefined" || usernameDB === null) {
 	usernameDB = {};
@@ -588,6 +601,13 @@ io.on('connection', function(socket) {
 		streamSettings.fps = parseInt(data);
 		io.emit("setFPS", data);
 	});
+  
+// 	socket.on("setCoords", function(data) {
+// 		streamSettings.x1 = data.x1 || streamSettings.x1;
+//     streamSettings.x2 = data.x2 || streamSettings.x2;
+// 		streamSettings.y1 = data.y1 || streamSettings.y1;
+//     streamSettings.y2 = data.y2 || streamSettings.y2;
+// 	});
 
 });
 

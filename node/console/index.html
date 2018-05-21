@@ -5,11 +5,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
-<script type="text/javascript" src="keymaster.js"></script>
+
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" /> -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
 <link rel="stylesheet" href="css/stylesheet.css">
+<script src="js/keymaster.js"></script>
 <script src="js/gamepad.js"></script>
 <script src="js/localforage.min.js"></script>
 <script src="js/rangeslider.min.js"></script>
@@ -20,7 +21,8 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <!-- <script src="js/bootstrap-slider.min.js"></script> -->
 <script src="js/jsmpg.js"></script>
-<script type="text/javascript" src="js/http-live-player.js"></script>
+<script src="js/http-live-player.js"></script>
+<script src="js/bootstrap-checkbox.min.js"></script>
 
 <script>
 	var socket;
@@ -52,17 +54,40 @@
 		<div id="container" class="container2">
 
 			<div id="picture" class="one well" oncontextmenu="return false">
+				
+				<ul class="nav nav-tabs">
+					<li class="active"><a data-toggle="tab" href="#lagless1">Lagless 1</a></li>
+<!-- 					<li><a data-toggle="tab" href="#lagless2">Lagless 2</a></li> -->
+					<li><a data-toggle="tab" href="#lagless3">Lagless 3</a></li>
+				</ul>
+
+				<div class="tab-content">
+					<div id="lagless1" class="tab-pane fade in active">
+						<image id="screenshot"></image>
+					</div>
+<!-- 					<div id="lagless2" class="tab-pane fade">
+					</div> -->
+					<div id="lagless3" class="tab-pane fade">
+						<canvas id="videoCanvas"></canvas>
+					</div>
+				</div>
 
 				<!-- <image id="screenshot"></image> -->
-<!-- 				<div id="screen"></div> -->
+				<div id="screen"></div>
 <!--         		<iframe id="screenshot" class="tunnel" src="https://twitchplaysnintendoswitch.localtunnel.me"></iframe> -->
-				<canvas id="videoCanvas"></canvas>
+<!-- 				<canvas id="videoCanvas"></canvas> -->
 				
 				
 				<div id="touchControls" class="container5">
-					<div id="leftStick" class="zone semi seven">
+					<div id="touchButtons">
+						
 					</div>
-					<div id="rightStick" class="zone semi eight">
+					
+					<div id="touchSticks" class="container5">
+						<div id="leftStick" class="zone semi seven">
+						</div>
+						<div id="rightStick" class="zone semi eight">
+						</div>
 					</div>
 				</div>
 
@@ -73,20 +98,28 @@
 
 					<div id="barUnderTheStream" class="well">
 						<div class="container4">
-							<div class="checkbox five">
-								<label class="checkbox-bootstrap checkbox-lg">                                        
-									<input id="keyboardController" type="checkbox">             
-									<span class="checkbox-placeholder"></span>           
-									Control with keyboard / or a controller
-								</label>
-							</div>
-							<div class="checkbox">
-								<label class="checkbox-bootstrap checkbox-lg">                                        
-									<input id="touchControlsCheckbox" type="checkbox">             
-									<span class="checkbox-placeholder"></span>           
+							<div class="five">
+<!-- 								<div>
+									Control with keyboard / or a controller<input id="keyboardController" type="checkbox">
+								</div>
+								<div>
 									Touch Controls
-								</label>
+									<input id="touchControlsCheckbox" type="checkbox">
+								</div> -->
+								<ul class="list-group">
+									<li class="list-group-item">
+										Control with keyboard / or a controller<input id="keyboardController" type="checkbox">
+									</li>
+									<li class="list-group-item">
+										Touch Controls
+										<input id="touchControlsCheckbox" type="checkbox">
+									</li>
+								</ul>
 							</div>
+<!-- 							<div class="checkbox">
+								Touch Controls
+								<input id="touchControlsCheckbox" type="checkbox">
+							</div> -->
 
 							<div id="currentPlayer" class="six">
 								Current Player:
@@ -120,8 +153,8 @@
 									<input id="fpsSlider" class="slider" type="range" min="1" step="1" max="15" value="15">
 								</div>
 								<div class="sliderContainer">
-									Threshold: <span id="threshold">5</span>
-									<input id="thresholdSlider" class="slider" type="range" min="1" step="1" max="128" value="5">
+									Threshold: <span id="threshold">30</span>
+									<input id="thresholdSlider" class="slider" type="range" min="1" step="1" max="128" value="30">
 								</div>
 							</div>
 						</div>
@@ -149,6 +182,20 @@
 									<li class="list-group-item">Q/E = ZL / ZR</li>
 									<li class="list-group-item">U/O = L / R</li>
 									<li class="list-group-item">R/Y = LStick / RStick buttons</li> -->
+								</ul>
+								<ul class="list-group">
+									<li class="list-group-item">List of games on the switch:</li>
+									<li class="list-group-item">Use "goto [name of game]" to switch games</li>
+									<li class="list-group-item">botw (Breath of the Wild)</li>
+									<li class="list-group-item">smo (Super Mario Odyssey)</li>
+									<li class="list-group-item">celeste (Celeste)</li>
+									<li class="list-group-item">mk8 (Mario Kart 8 Deluxe)</li>
+									<li class="list-group-item">splatoon2 (Splatoon 2)</li>
+									<li class="list-group-item">sonic (Sonic Mania)</li>
+									<li class="list-group-item">rocket league (Rocket League)</li>
+									<li class="list-group-item">skyrim (Skyrim)</li>
+									<li class="list-group-item">mario (Super Mario Bros vs.)</li>
+									<li class="list-group-item">arms (Arms)</li>
 								</ul>
 							</div>
 						</div>
@@ -292,6 +339,7 @@
 	var keyboardTimer;
 	var gamepadTimer;
 	var touchTimer;
+	var lagless1Break = false;
 
 	var keyboardLayout = {};
 	keyboardLayout.LYU = "W";
@@ -411,7 +459,11 @@
 
 		// 		$("#video").src = $("#screenshot").src;
 		// 		$("#video").attr("src", $("#screenshot").attr("src"));
-
+		
+		if(lagless1Break) {
+			return;
+		}
+		
 		var fps = parseInt($("#fpsSlider").val());
 		var timeToSleep = 1000 / fps;
 		setTimeout(getLatestImage, timeToSleep);
@@ -1143,6 +1195,12 @@
 			// 			window.addEventListener("keydown", handleKey, false);
 		}
 	});
+	
+	$('#keyboardController').checkboxpicker({
+		html: true,
+		offLabel: '<span class="glyphicon glyphicon-remove">',
+		onLabel: '<span class="glyphicon glyphicon-ok">'
+	});
 
 
 
@@ -1311,6 +1369,12 @@
 		}
     });
 	
+// 	$('#touchControlsCheckbox').checkboxpicker({
+// 		html: true,
+// 		offLabel: '<span class="glyphicon glyphicon-remove">',
+// 		onLabel: '<span class="glyphicon glyphicon-ok">'
+// 	});
+	
 	keyboardTimer = setInterval(sendKeyboardInputs, 10);
 	gamepadTimer = setInterval(sendGamePadInputs, 10);
 	touchTimer = setInterval(sendTouchInputs, 10);
@@ -1395,7 +1459,45 @@
 	// Create h264 player
 	var uri = "wss://twitchplaysnintendoswitch.localtunnel.me";
 	var wsavc = new WSAvcPlayer(canvas, "webgl", 1, 35);
-	wsavc.connect(uri);
-	setTimeout(wsavc.playStream, 3000);
+	
+	
+	
+	
+// 	wsavc.connect(uri);
+	getLatestImage();
+	
+	
+	/* SWITCH IMPLEMENTATIONS */
+	
+	$(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function (e) {
+		
+		var tab = $(e.target);
+		var contentId = tab.attr("href");
+
+		//This check if the tab is active
+		if (tab.parent().hasClass("active")) {
+			console.log("the tab with the content id " + contentId + " is visible");
+			
+			if(contentId == "#lagless1") {
+				$("#screen").append("<img id='screenshot'></img>")
+				
+				wsavc.disconnect();
+				lagless1Break = false;
+				getLatestImage();
+			} else if(contentId == "#lagless3") {
+				
+				setTimeout(function() {
+					$("#screen").empty();
+				}, 500);
+				
+				lagless1Break = true;
+				var uri = "wss://twitchplaysnintendoswitch.localtunnel.me";
+				wsavc.connect(uri);
+			}
+			
+		} else {
+		}
+
+	});
 	
 </script>

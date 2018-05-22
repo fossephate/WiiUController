@@ -23,21 +23,9 @@
 <script src="js/jsmpg.js"></script>
 <script src="js/http-live-player.js"></script>
 <script src="js/bootstrap-checkbox.min.js"></script>
-
-<script>
-	var socket;
-	// 	socket = io('https://fosse.co', {
-	// 		path: '/8110/socket.io'
-	// 	});
-
-	socket = io("https://twitchplaysnintendoswitch.com", {
-		path: "/8110/socket.io",
-		transports: ['websocket'] // added
-	});
-	// 	socket = io('fosse.co:8080');
-	//socket = io("http://fosse.co:80");
-	//socket = io("http://fosse.co:80/8110/socket.io");
-</script>
+<!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+<!-- <script src="https://simplewebrtc.com/latest-v3.js"></script> -->
+<script src="js/meeting-client.js"></script>
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 <script>
      (adsbygoogle = window.adsbygoogle || []).push({
@@ -137,7 +125,10 @@
 								<button type="button" data-toggle="modal" data-target="#settingsWindow" class="btn btn-info btn-settings">
 									<i class="glyphicon glyphicon-cog"></i>
 								</button>
-								<a id="authenticateButton" href="/8110/auth/twitch"><img src="https://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a>
+								<button id="toggleAudio" type="button" data-toggle="modal" class="btn btn-info btn-settings">
+									<i class="glyphicon glyphicon-headphones"></i>
+								</button>
+								<a id="authenticateButton" href="/8110/auth/twitch/"><img src="https://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a>
 
 								<div class="sliderContainer">
 									Quality: <span id="quality">70</span>
@@ -335,11 +326,23 @@
 </html>
 
 <script>
+
+	var socket;
+	// 	socket = io('https://fosse.co', {
+	// 		path: '/8110/socket.io'
+	// 	});
+
+	socket = io("https://twitchplaysnintendoswitch.com", {
+		path: "/8110/socket.io",
+		transports: ['websocket'] // added
+	});
+
 	var globalEventTimer = false;
 	var keyboardTimer;
 	var gamepadTimer;
 	var touchTimer;
 	var lagless1Break = false;
+	var audio = true;
 
 	var keyboardLayout = {};
 	keyboardLayout.LYU = "W";
@@ -456,6 +459,13 @@
 
 	function getLatestImage() {
 		$("#screen").load("/8110/img/ #screenshot");
+		
+		if(typeof $("#screen")[0].children[0] != "undefined") {
+			var src = $("#screen")[0].children[0].src;
+// 			if(src == "data:image/jpeg;base64,") {
+// 				socket.emit("restart");
+// 			}
+		}
 
 		// 		$("#video").src = $("#screenshot").src;
 		// 		$("#video").attr("src", $("#screenshot").attr("src"));
@@ -572,7 +582,7 @@
 		controller.RStick.x = 128;
 		controller.RStick.y = 128;
 	}
-
+	
 	var oldControllerState = "";
 
 
@@ -585,6 +595,8 @@
 		if (authCookie == null) {
 			$("#keyboardController").prop("checked", false);
 			alert("You need to connect to twitch!");
+			setCookie("AttemptedAuth", 1, 60);
+			window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 			return;
 		}
 
@@ -1067,6 +1079,8 @@
 		if (authCookie == null) {
 			$("#keyboardController").prop("checked", false);
 			alert("You need to connect to twitch!");
+			setCookie("AttemptedAuth", 1, 60);
+			window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 			return;
 		}
 		//controller.reset();
@@ -1301,6 +1315,8 @@
 		if (authCookie == null) {
 			$("#touchControlsCheckbox").prop("checked", false);
 			alert("You need to connect to twitch!");
+			setCookie("AttemptedAuth", 1, 60);
+			window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 			return;
 		}
 		//controller.reset();
@@ -1384,7 +1400,7 @@
 	
 	
 	/* AUTH  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
-	$("#authenticateButton").on('click', function(event) {
+	$("#authenticateButton").on("click", function(event) {
 		setCookie("AttemptedAuth", 1, 60);
 	});
 
@@ -1499,5 +1515,102 @@
 		}
 
 	});
+	
+	
+	/* AUDIO */
+// 	var webrtc = new SimpleWebRTC({
+//         media: {
+//             audio: true,
+//             video: false
+//         },
+// 		// immediately ask for camera access
+// 		//autoRequestMedia: true
+// 	});
+// 	// we have to wait until it's ready
+// 	// doesn't want to work
+// // 	webrtc.on("readyToCall", function() {
+// // 		// you can name it anything
+// // 		webrtc.joinRoom("TwitchPlaysNintendoSwitch");
+// // 		console.log("joining");
+// // 	});
+	
+// 	// just wait 2 seconds:
+// 	setTimeout(function() {
+// 		webrtc.joinRoom("TwitchPlaysNintendoSwitch");
+// 		console.log("joining");
+// 	}, 2000);
+	
+	
+//     $("#toggleAudio").on("click", function() {
+		
+// 		toggleAudio = !toggleAudio;
+		
+// 		if(toggleAudio) {
+// 			webrtc.joinRoom("TwitchPlaysNintendoSwitch");
+// 			console.log("joining");
+// 		} else {
+// 			webrtc.leaveRoom();
+// 			console.log("leaving");
+// 		}
+		
+//     });
+	
+	
+		/* NEW AUDIO @@@@@@@@@@@@@@@@ */
+		var hash = window.location.hash.replace('#', '');
+		var meeting = new Meeting(hash);
+		var remoteMediaStreams = document.getElementById('remote-media-streams');
+		var localMediaStream = document.getElementById('local-media-stream');
+		var channel = "#twitchplaysnintendoswitch";
+		var sender = Math.round(Math.random() * 999999999) + 999999999;
+		//var SIGNALING_SERVER = 'https://socketio-over-nodejs2.herokuapp.com:443/';
+		//var SIGNALING_SERVER = 'https://twitchplaysnintendoswitch.com/8110/';
+		var socket2 = io("https://twitchplaysnintendoswitch.com", {
+			path: "/8110/socket.io/",
+			transports: ['websocket'] // added
+		});
+		socket2.emit('new-channel', {
+			channel: channel,
+			sender: sender
+		});
+		//socket = io.connect(SIGNALING_SERVER + channel);
+		io.connect("https://twitchplaysnintendoswitch.com", {
+			path: "/8110/socket.io/",
+			transports: ['websocket'] // added
+		});
+		socket2.on('connect', function() {
+			// setup peer connection & pass socket object over the constructor!
+		});
+		socket2.send = function(message) {
+			socket.emit('message', {
+				sender: sender,
+				data: message
+			});
+		};
+		meeting.openSignalingChannel = function(callback) {
+			return socket.on('message', callback);
+		};
+		// on getting media stream
+		meeting.onaddstream = function(e) {
+			//if (e.type == 'local') localMediaStream.appendChild(e.audio);
+			//if (e.type == 'remote') remoteMediaStreams.insertBefore(e.audio, remoteMediaStreams.firstChild);
+		};
+		// using firebase for signaling
+		meeting.firebase = 'rtcweb';
+		// if someone leaves; just remove his audio
+		meeting.onuserleft = function(userid) {
+			var audio = document.getElementById(userid);
+			if (audio) audio.parentNode.removeChild(audio);
+		};
+		// check pre-created meeting rooms
+		meeting.check();
+	
+	
+    $("#toggleAudio").on("click", function() {
+		toggleAudio = !toggleAudio;
+		if(toggleAudio) {
+		} else {
+		}
+    });
 	
 </script>

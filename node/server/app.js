@@ -26,7 +26,7 @@ const util = require("util");
 
 var streamSettings = {
 	x1: 319 - 1920,
-  y1: 61,
+	y1: 61,
 	x2: 319 + 1280 - 1920,
 	y2: 61 + 720,
 	fps: 15,
@@ -37,77 +37,86 @@ var streamSettings = {
 var lastImage = "";
 
 
-var session        = require('express-session');
-var passport       = require('passport');
+var session = require('express-session');
+var passport = require('passport');
 var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
-var request        = require('request');
-var handlebars     = require('handlebars');
+var request = require('request');
+var handlebars = require('handlebars');
 
 const TWITCH_CLIENT_ID = "mxpjdvl0ymc6nrm4ogna0rgpuplkeo";
-const TWITCH_SECRET    = config.TWITCH_SECRET;
-const SESSION_SECRET   = config.SESSION_SECRET;
-const CALLBACK_URL     = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/callback";  // You can run locally with - http://localhost:3000/auth/twitch/callback
+const TWITCH_SECRET = config.TWITCH_SECRET;
+const SESSION_SECRET = config.SESSION_SECRET;
+const CALLBACK_URL = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/callback"; // You can run locally with - http://localhost:3000/auth/twitch/callback
 
-app.use(session({secret: SESSION_SECRET, resave: false, saveUninitialized: false}));
+app.use(session({
+	secret: SESSION_SECRET,
+	resave: false,
+	saveUninitialized: false
+}));
 app.use(express.static("public"));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Override passport profile function to get user profile from Twitch API
 OAuth2Strategy.prototype.userProfile = function(accessToken, done) {
-  var options = {
-    url: "https://api.twitch.tv/kraken/user",
-    method: "GET",
-    headers: {
-      "Client-ID": TWITCH_CLIENT_ID,
-      "Accept": "application/vnd.twitchtv.v5+json",
-      "Authorization": "OAuth " + accessToken
-    }
-  };
+	var options = {
+		url: "https://api.twitch.tv/kraken/user",
+		method: "GET",
+		headers: {
+			"Client-ID": TWITCH_CLIENT_ID,
+			"Accept": "application/vnd.twitchtv.v5+json",
+			"Authorization": "OAuth " + accessToken
+		}
+	};
 
-  request(options, function (error, response, body) {
-    if (response && response.statusCode == 200) {
-      done(null, JSON.parse(body));
-    } else {
-      done(JSON.parse(body));
-    }
-  });
+	request(options, function(error, response, body) {
+		if (response && response.statusCode == 200) {
+			done(null, JSON.parse(body));
+		} else {
+			done(JSON.parse(body));
+		}
+	});
 }
 
 passport.serializeUser(function(user, done) {
-    done(null, user);
+	done(null, user);
 });
 
 passport.deserializeUser(function(user, done) {
-    done(null, user);
+	done(null, user);
 });
 
 passport.use("twitch", new OAuth2Strategy({
-    authorizationURL: "https://api.twitch.tv/kraken/oauth2/authorize",
-    tokenURL: "https://api.twitch.tv/kraken/oauth2/token",
-    clientID: TWITCH_CLIENT_ID,
-    clientSecret: TWITCH_SECRET,
-    callbackURL: CALLBACK_URL,
-    state: true
-  },
-  function(accessToken, refreshToken, profile, done) {
-    profile.accessToken = accessToken;
-    profile.refreshToken = refreshToken;
+		authorizationURL: "https://api.twitch.tv/kraken/oauth2/authorize",
+		tokenURL: "https://api.twitch.tv/kraken/oauth2/token",
+		clientID: TWITCH_CLIENT_ID,
+		clientSecret: TWITCH_SECRET,
+		callbackURL: CALLBACK_URL,
+		state: true
+	},
+	function(accessToken, refreshToken, profile, done) {
+		profile.accessToken = accessToken;
+		profile.refreshToken = refreshToken;
 
-    // Securely store user profile in your DB
-    //User.findOrCreate(..., function(err, user) {
-    //  done(err, user);
-    //});
+		// Securely store user profile in your DB
+		//User.findOrCreate(..., function(err, user) {
+		//  done(err, user);
+		//});
 
-    done(null, profile);
-  }
+		done(null, profile);
+	}
 ));
 
 // Set route to start OAuth link, this is where you define scopes to request
-app.get("/auth/twitch", passport.authenticate("twitch", { scope: "user_read" }));
+app.get("/auth/twitch", passport.authenticate("twitch", {
+	scope: "user_read"
+}));
 
 // Set route for OAuth redirect
-app.get("/auth/twitch/callback", passport.authenticate("twitch", { successRedirect: "/", failureRedirect: "/" }));
+app.get("/auth/twitch/callback", passport.authenticate("twitch", {
+	successRedirect: "/",
+	failureRedirect: "/"
+}));
 
 // Define a simple template to safely generate HTML with values from user's profile
 var template = handlebars.compile(`
@@ -126,19 +135,21 @@ window.location.href = "https://twitchplaysnintendoswitch.com";
 </html>`);
 
 // If user has an authenticated session, display it, otherwise display link to authenticate
-app.get("/", function (req, res) {
-	if(req.session && req.session.passport && req.session.passport.user) {
+app.get("/", function(req, res) {
+	if (req.session && req.session.passport && req.session.passport.user) {
 		console.log(req.session.passport.user);
-		var time = 60*24*60*1000;// 1 day
+		var time = 60 * 24 * 60 * 1000; // 1 day
 		//var time = 15*60*1000;// 15 minutes
 		var username = req.session.passport.user.display_name;
 		var secret = config.HASH_SECRET;
 		var hashedUsername = crypto.createHmac("sha256", secret).update(username).digest("hex");
-		
+
 		usernameDB[hashedUsername] = username;
 		localStorage.setItem("db", JSON.stringify(usernameDB));
-		
-		res.cookie("TwitchPlaysNintendoSwitch", hashedUsername, { maxAge: time});
+
+		res.cookie("TwitchPlaysNintendoSwitch", hashedUsername, {
+			maxAge: time
+		});
 		res.send(template(req.session.passport.user));
 	} else {
 		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
@@ -146,20 +157,22 @@ app.get("/", function (req, res) {
 });
 
 
-app.get("/stats/", function (req, res) {
-  if(req.session && req.session.passport && req.session.passport.user) {
-    console.log(req.session.passport.user);
-    res.cookie('TwitchPlaysNintendoSwitch', req.session.passport.user.display_name, { maxAge: 900000 });
-    res.send(template(req.session.passport.user));
-  } else {
-    res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
-  }
+app.get("/stats/", function(req, res) {
+	if (req.session && req.session.passport && req.session.passport.user) {
+		console.log(req.session.passport.user);
+		res.cookie('TwitchPlaysNintendoSwitch', req.session.passport.user.display_name, {
+			maxAge: 900000
+		});
+		res.send(template(req.session.passport.user));
+	} else {
+		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
+	}
 });
 
-app.get("/img/", function (req, res) {
+app.get("/img/", function(req, res) {
 	var imgSrc = "data:image/jpeg;base64," + lastImage;
 	var html = "<html>" + "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>" + "</html";
-// 	var html = "<html>" + "<video controls id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'></video>" + "</html";
+	// 	var html = "<html>" + "<video controls id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'></video>" + "</html";
 	res.send(html);
 });
 
@@ -179,8 +192,8 @@ var currentPlayerSite = '\
 </script>\
 </html>';
 
-app.get("/currentplayer/", function (req, res) {
-  res.send(currentPlayerSite);
+app.get("/currentplayer/", function(req, res) {
+	res.send(currentPlayerSite);
 });
 
 
@@ -202,8 +215,8 @@ var controlsSite = '\
 	<script>\
 	</script>\
 </html>';
-app.get("/controls/", function (req, res) {
-  res.send(controlsSite);
+app.get("/controls/", function(req, res) {
+	res.send(controlsSite);
 });
 
 
@@ -222,13 +235,13 @@ var usernameDB;
 var localStorage;
 
 if (typeof localStorage === "undefined" || localStorage === null) {
-  var LocalStorage = require("node-localstorage").LocalStorage;
-  localStorage = new LocalStorage("./myDatabase");
+	var LocalStorage = require("node-localstorage").LocalStorage;
+	localStorage = new LocalStorage("./myDatabase");
 }
 
 usernameDB = JSON.parse(localStorage.getItem("db"));
 
-if(typeof usernameDB == "undefined" || usernameDB === null) {
+if (typeof usernameDB == "undefined" || usernameDB === null) {
 	usernameDB = {};
 }
 
@@ -258,10 +271,10 @@ function Client(socket) {
 	this.hashedIP = "unknown";
 	this.name = "none";
 	this.username = null;
-  
+
 	this.isController = false;
-	
-	
+
+
 
 	// 	this.download = function(socket, url, filename) {
 	// 		var objectToSend = {};
@@ -297,7 +310,7 @@ function Client(socket) {
 		objectToSend.q = q;
 		io.to(this.id).emit("ss2", objectToSend);
 	};
-	
+
 	this.getImage3 = function(x1, y1, x2, y2, q, s) {
 		var objectToSend = {};
 		objectToSend.x1 = x1;
@@ -308,7 +321,7 @@ function Client(socket) {
 		objectToSend.s = s;
 		io.to(this.id).emit("ss3", objectToSend);
 	};
-	
+
 	this.quit = function() {
 		io.to(this.id).emit("quit");
 	}
@@ -380,9 +393,9 @@ var channels = {};
 
 io.set('transports', [
 	'polling',
-    'websocket',
-    'xhr-polling',
-    'jsonp-polling'
+	'websocket',
+	'xhr-polling',
+	'jsonp-polling'
 ]);
 
 io.on('connection', function(socket) {
@@ -396,31 +409,25 @@ io.on('connection', function(socket) {
 	console.log("number of clients connected: " + clients.length);
 
 	socket.broadcast.emit("registerNames");
-	
 
-	
+
+
 	socket.on("registerName", function(data) {
 		var index = findClientByID(socket.id);
 		clients[index].name = data;
 	});
-  
+
 	socket.on("registerUsername", function(data) {
 		var index = findClientByID(socket.id);
-		
-		if(typeof usernameDB[data] == "undefined") {
+
+		if (typeof usernameDB[data] == "undefined") {
 			clients[index].username = null;
 			return;
 		}
-		
+
 		//clients[index].username = data;
 		clients[index].username = usernameDB[data];
 	});
-	
-// 	socket.on("registerIP", function(data) {
-// 		var index = findClientByID(socket.id);
-// 		clients[index].ip = data.ip + "";
-// 		clients[index].hashedIP = crypto.createHash('md5').update(clients[index].ip).digest("hex");
-// 	});
 
 
 	socket.on("listAll", function() {
@@ -454,12 +461,16 @@ io.on('connection', function(socket) {
 		// 		}
 		// 		lastImage = "";
 		// 		lastImage = data[50] + data[61] + data[102];
-    
-    //console.log("got image");
+
+		//console.log("got image");
 
 		obj.src = data;
-		
+
 		lastImage = data;
+		
+		if(lastImage == "") {
+			io.emit("restart");
+		}
 
 		var index = findClientByID(socket.id);
 		if (index != -1) {
@@ -512,40 +523,20 @@ io.on('connection', function(socket) {
 		client.getImage(quality);
 	});
 
-
-	// 	socket.on("ping2", function() {
-	// 		console.log("ping2ed");
-	// 	});
-	// 	socket.on("pong2", function() {
-	// 		console.log("pong2ed");
-	// 	});
-	// 	socket.on("ping2", function() {
-	// 		console.log("ping2ing");
-	// 		for(var i = 0; i < clients.length; i++) {
-	// 			var client = clients[i];
-	// 			client.ping();
-	// 		}
-	// 	});
-
 	socket.on("sendControllerState", function(data) {
-		//console.log(data);
-		//io.emit("controllerState", data);
 
 		var index = findClientByID(socket.id);
 		var client = clients[index];
-		
-		if(client.username == null) {
+
+		if (client.username == null) {
 			return;
 		}
-		
+
 		if (controller != null) {
 			io.to(controller.id).emit("controllerState", data);
 		}
 		
-// 		console.log(usernameDB);
-// 		console.log("hashedIP: " + client.hashedIP);
-// 		io.emit("current player", usernameDB[client.hashedIP]);
-    	io.emit("current player", client.username);
+		io.emit("current player", client.username);
 	});
 
 	socket.on("directedGetImage", function(data) {
@@ -570,21 +561,21 @@ io.on('connection', function(socket) {
 
 
 
-	socket.on("chat message", function(msg) {
+// 	socket.on("chat message", function(msg) {
 
-		if (typeof(msg) != "string") {
-			console.log("not a string!");
-			return;
-		}
-		
-		var index = findClientByID(socket.id);
-		var client = clients[index];
-		var db = value;
-		var username = usernameDB[client.hashedIP];
-		var message = username + ": " + msg;
-		io.emit("chat message", message);
-	});
-	
+// 		if (typeof(msg) != "string") {
+// 			console.log("not a string!");
+// 			return;
+// 		}
+
+// 		var index = findClientByID(socket.id);
+// 		var client = clients[index];
+// 		var db = value;
+// 		var username = client.username;
+// 		var message = username + ": " + msg;
+// 		io.emit("chat message", message);
+// 	});
+
 	socket.on("restart", function() {
 		console.log("restarting");
 		io.emit("quit");
@@ -597,7 +588,7 @@ io.on('connection', function(socket) {
 		var i = findClientByID(socket.id)
 		clients.splice(i, 1);
 	});
-	
+
 	socket.on("setQuality", function(data) {
 		streamSettings.quality = parseInt(data);
 		io.emit("setQuality", data);
@@ -610,75 +601,75 @@ io.on('connection', function(socket) {
 		streamSettings.fps = parseInt(data);
 		io.emit("setFPS", data);
 	});
-  
-// 	socket.on("setCoords", function(data) {
-// 		streamSettings.x1 = data.x1 || streamSettings.x1;
-//     streamSettings.x2 = data.x2 || streamSettings.x2;
-// 		streamSettings.y1 = data.y1 || streamSettings.y1;
-//     streamSettings.y2 = data.y2 || streamSettings.y2;
-// 	});
-	
-	
-	
+
+	// 	socket.on("setCoords", function(data) {
+	// 		streamSettings.x1 = data.x1 || streamSettings.x1;
+	//     streamSettings.x2 = data.x2 || streamSettings.x2;
+	// 		streamSettings.y1 = data.y1 || streamSettings.y1;
+	//     streamSettings.y2 = data.y2 || streamSettings.y2;
+	// 	});
+
+
+
 	/* WebRTC @@@@@@@@@@@@@@@@@@@@@@@@ */
-	
-	
 
-    socket.on("message", function (data) {
-        socket.broadcast.emit("message", data);
-    });
-	
-    var initiatorChannel = '';
-    if (!io.isConnected) {
-        io.isConnected = true;
-    }
-	
-    socket.on('new-channel', function (data) {
-        if (!channels[data.channel]) {
-            initiatorChannel = data.channel;
-        }
 
-        channels[data.channel] = data.channel;
-        onNewNamespace(data.channel, data.sender);
-    });
 
-    socket.on('presence', function (channel) {
-        var isChannelPresent = !! channels[channel];
-        socket.emit('presence', isChannelPresent);
-    });
+	socket.on("message", function(data) {
+		socket.broadcast.emit("message", data);
+	});
 
-    socket.on('disconnect', function (channel) {
-        if (initiatorChannel) {
-            delete channels[initiatorChannel];
-        }
-    });
+	var initiatorChannel = '';
+	if (!io.isConnected) {
+		io.isConnected = true;
+	}
+
+	socket.on('new-channel', function(data) {
+		if (!channels[data.channel]) {
+			initiatorChannel = data.channel;
+		}
+
+		channels[data.channel] = data.channel;
+		onNewNamespace(data.channel, data.sender);
+	});
+
+	socket.on('presence', function(channel) {
+		var isChannelPresent = !!channels[channel];
+		socket.emit('presence', isChannelPresent);
+	});
+
+	socket.on('disconnect', function(channel) {
+		if (initiatorChannel) {
+			delete channels[initiatorChannel];
+		}
+	});
 
 });
 
 function onNewNamespace(channel, sender) {
-    io.of('/' + channel).on('connection', function (socket) {
-        var username;
-        if (io.isConnected) {
-            io.isConnected = false;
-            socket.emit('connect', true);
-        }
+	io.of('/' + channel).on('connection', function(socket) {
+		var username;
+		if (io.isConnected) {
+			io.isConnected = false;
+			socket.emit('connect', true);
+		}
 
-        socket.on('message', function (data) {
-            if (data.sender == sender) {
-                if(!username) username = data.data.sender;
+		socket.on('message', function(data) {
+			if (data.sender == sender) {
+				if (!username) username = data.data.sender;
 				console.log(data);
-                
-                socket.broadcast.emit('message', data.data);
-            }
-        });
-        
-        socket.on('disconnect', function() {
-            if(username) {
-                socket.broadcast.emit('user-left', username);
-                username = null;
-            }
-        });
-    });
+
+				socket.broadcast.emit('message', data.data);
+			}
+		});
+
+		socket.on('disconnect', function() {
+			if (username) {
+				socket.broadcast.emit('user-left', username);
+				username = null;
+			}
+		});
+	});
 }
 
 // 	setInterval(function(){
@@ -725,7 +716,7 @@ function onNewNamespace(channel, sender) {
 // 	var y2 = 855
 // 	var quality = streamSettings.quality;
 // 	var scale = streamSettings.scale;
-	
+
 // 	getImageFromUser3(user, x1, y1, x2, y2, quality, scale);
 // }, 66.66666);
 
@@ -739,33 +730,7 @@ function stream() {
 	var quality = streamSettings.quality;
 	var scale = streamSettings.scale;
 	getImageFromUser3(user, x1, y1, x2, y2, quality, scale);
-	setTimeout(stream, 1000/streamSettings.fps);
+	setTimeout(stream, 1000 / streamSettings.fps);
 }
 
 stream();
-
-
-
-
-function getTime(x) {
-	return Math.pow(x, (3 / 2)) + 40;
-}
-
-
-
-// function autoGetImage() {
-//   var user = "Matt";
-//   var x1 = 255;
-//   var x2 = 1665;
-//   var y1 = 70;
-//   var y2 = 855;
-
-//   var q = parseInt((Math.random()*50));
-//   var quality = q;
-//   getImageFromUser2(user, x1, y1, x2, y2, quality);
-
-//   setTimeout(autoGetImage, getTime(q));
-// }
-
-
-//autoGetImage();

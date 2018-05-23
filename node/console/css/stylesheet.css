@@ -1,25 +1,23 @@
 body {
 	font: 13px Helvetica, Arial;
 	padding: 1%;
-/* 	position: fixed; */
+	/* 	position: fixed; */
 	margin: 0;
-/* 	overflow: hidden; */
-  width: 100%;
-/* 	height: 100%; */
+	/* 	overflow: hidden; */
+	width: 100%;
+	/* 	height: 100%; */
 }
 
-#twitchchat {
-  
-}
+#twitchchat {}
 
 #twitchvideo {
-/*   position: absolute; */
-/*   top: 0; */
-/*   right: 0; */
+	/*   position: absolute; */
+	/*   top: 0; */
+	/*   right: 0; */
 }
 
 #barUnderTheStream {
-  min-height: 125px;
+	min-height: 125px;
 }
 
 #controls {
@@ -32,32 +30,26 @@ body {
 	padding-bottom: 20px;
 }
 
-
 #chat {
-/* 	position: absolute;
+	/* 	position: absolute;
 	top: 10%;
 	right: 0; */
-	
-/* 	min-width: 200px;
+	/* 	min-width: 200px;
 	max-width: 500px; */
-/* 	width: 300px; */
-  min-width: 250px;
-/* 	width: 30%; */
+	/* 	width: 300px; */
+	min-width: 250px;
+	/* 	width: 30%; */
 	height: 100%;
-	
-/* 	max-height: 900px; */
+	/* 	max-height: 900px; */
 	padding: 20px;
 	background: #AAAAAA;
 	/* 	margin-right: 0; */
-/* 	margin-left: 0; */
+	/* 	margin-left: 0; */
 }
 
-#messages {
-}
+#messages {}
 
 #messageList {
-	
-	
 	list-style-type: none;
 	margin: 0;
 	padding: 0;
@@ -70,11 +62,11 @@ body {
 #messageList li {
 	padding: 5px 10px;
 	opacity: .9;
-/* 	height: 50px; */
-  max-width: 500px;
-  overflow: auto;
-  max-height: 50px;
-  word-wrap: break-word;
+	/* 	height: 50px; */
+	max-width: 500px;
+	overflow: auto;
+	max-height: 50px;
+	word-wrap: break-word;
 }
 
 #messageList li:nth-child(odd) {
@@ -88,7 +80,6 @@ body {
 #chatForm {
 	width: 100%;
 	height: 7%;
-	
 	background: #000;
 }
 
@@ -96,27 +87,25 @@ body {
 	border: none;
 	padding: 0;
 	margin: 0;
-	
-/* 	background: #FFF; */
-	
+	/* 	background: #FFF; */
 	width: 70%;
 	height: 100%;
 }
 
 #sendButton {
-/* 	background: rgb(130, 224, 255); */
+	/* 	background: rgb(130, 224, 255); */
 	border: none;
 	width: 25%;
 	height: 100%;
 }
 
 #container {
-/* 	text-align: center; */
+	/* 	text-align: center; */
 }
 
 #description {
 	text-align: center;
-/* 	width: 50%; */
+	/* 	width: 50%; */
 }
 
 #metaContainer {
@@ -125,30 +114,30 @@ body {
 }
 
 .container2 {
-    width: 100%;
-/*     height: 200px; */
-/*     background: aqua; */
-    margin: auto;
-    padding: 0;
+	width: 100%;
+	/*     height: 200px; */
+	/*     background: aqua; */
+	margin: auto;
+	padding: 0;
 }
 
 .one {
-    width: 75%;
-/* 	width: auto; */
-    padding: 1%;
-    margin: 0;
-/*     height: 200px; */
-/*     background: red; */
-    float: left;
-  
+	width: 75%;
+	/* 	width: auto; */
+	padding: 1%;
+	margin: 0;
+	/*     height: 200px; */
+	/*     background: red; */
+	float: left;
 }
+
 .two {
-/*     margin-left: 85%; */
-    height: 100%;
-    background: black;
-/*     display: inline-block; */
-    width: 25%;
-/*     float: right; */
+	/*     margin-left: 85%; */
+	height: 100%;
+	background: black;
+	/*     display: inline-block; */
+	width: 25%;
+	/*     float: right; */
 }
 
 #picture {
@@ -156,16 +145,16 @@ body {
 }
 
 #screenshot {
-  width: 100%;
+	width: 100%;
 }
 
 .tunnel {
-/*   overflow: visible; */
-  height: 100%;
+	/*   overflow: visible; */
+	height: 100%;
 }
 
 #videoCanvas {
-  width: 100%;
+	width: 100%;
 }
 
 #namesList {
@@ -178,9 +167,8 @@ ul {
 	text-align: left;
 }
 
-
-
 /* KEYBOARD CONFIG */
+
 #keyboardLayoutConfig {
 	margin-top: 5px;
 	margin-left: 5px;
@@ -231,205 +219,218 @@ ul {
 	color: #333;
 }
 
-
 /* STREAM SETTINGS */
+
 .slider {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 15px;
-    border-radius: 5px;   
-    background: #d3d3d3;
-    outline: none;
-    opacity: 0.7;
-    -webkit-transition: .2s;
-    transition: opacity .2s;
-    margin-top: 10px;
+	-webkit-appearance: none;
+	width: 100%;
+	height: 15px;
+	border-radius: 5px;
+	background: #d3d3d3;
+	outline: none;
+	opacity: 0.7;
+	-webkit-transition: .2s;
+	transition: opacity .2s;
+	margin-top: 10px;
 }
 
 .slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%; 
-    background: #4CAF50;
-    cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;
+	background: #4CAF50;
+	cursor: pointer;
 }
 
 .slider::-moz-range-thumb {
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    background: #4CAF50;
-    cursor: pointer;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;
+	background: #4CAF50;
+	cursor: pointer;
 }
 
 #streamSettings {
-  text-align: center;
+	text-align: center;
 }
 
 .sliderContainer {
-  width: 75%;
-  margin: 0 auto;
-  padding: 5px;
+	width: 75%;
+	margin: 0 auto;
+	padding: 5px;
 }
 
 .container3 {
-    width: 100%;
-/*     height: 200px; */
-/*     background: aqua; */
-    margin: auto;
-    padding: 2%;
+	width: 100%;
+	/*     height: 200px; */
+	/*     background: aqua; */
+	margin: auto;
+	padding: 2%;
 	overflow-y: scroll;
 }
 
 .three {
-    width: 40%;
-/* 	width: auto; */
-/*     padding: 0; */
-/*     margin: 0; */
-	margin-left: 5%;
-/*     height: 200px; */
-/*     background: red; */
-    float: left;
-  
-}
-.four {
-    margin-left: 55%;
 	width: 40%;
-    height: 100%;
-/*     background: black; */
-/*     display: inline-block; */
-    width: 40%;
-/*     float: right; */
+	/* 	width: auto; */
+	/*     padding: 0; */
+	/*     margin: 0; */
+	margin-left: 5%;
+	/*     height: 200px; */
+	/*     background: red; */
+	float: left;
+}
+
+.four {
+	margin-left: 55%;
+	width: 40%;
+	height: 100%;
+	/*     background: black; */
+	/*     display: inline-block; */
+	width: 40%;
+	/*     float: right; */
 }
 
 .container4 {
-    width: 100%;
-/*     height: 200px; */
-/*     background: aqua; */
-    margin: auto;
-    padding: 0;
-/* 	overflow-y: scroll; */
+	width: 100%;
+	/*     height: 200px; */
+	/*     background: aqua; */
+	margin: auto;
+	padding: 0;
+	/* 	overflow-y: scroll; */
 }
 
 .five {
-    width: 40%;
-/* 	width: auto; */
-    padding: 0;
-/*     margin: 0; */
-	margin-left: 5%;
-    float: left;
-  
-}
-.six {
-    margin-left: 55%;
 	width: 40%;
-/*     height: 100%; */
-/*     background: black; */
-/*     display: inline-block; */
-    width: 40%;
-/*     float: right; */
+	/* 	width: auto; */
+	padding: 0;
+	/*     margin: 0; */
+	margin-left: 5%;
+	float: left;
+}
+
+.six {
+	margin-left: 55%;
+	width: 40%;
+	/*     height: 100%; */
+	/*     background: black; */
+	/*     display: inline-block; */
+	width: 40%;
+	/*     float: right; */
 }
 
 #controlsLabel {
 	margin-bottom: 10px;
 }
+
 #settingsLabel {
 	margin-bottom: 10px;
 }
 
-
 /* test */
+
 .clearfix:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
 }
-
-
 
 /* JOYSTICKS */
+
 #jButtons {
-  position: relative;
-  border: solid 1px #aaa;
-  display: inline-block;
-  width: 100%;
-  border-radius: 10px;
-  height: 50px;
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-sizing: border-box;
+	position: relative;
+	border: solid 1px #aaa;
+	display: inline-block;
+	width: 100%;
+	border-radius: 10px;
+	height: 50px;
+	overflow: hidden;
+	margin-bottom: 20px;
+	box-sizing: border-box;
 }
+
 .jButton {
-  display: inline-block;
-  background: #ccc;
-  color: black;
-  height: 50px;
-  width: 33%;
-  margin: 0;
-  margin-right: -3px;
-  text-align: center;
-  line-height: 45px;
-  font-size: 25px;
-  cursor: pointer;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+	display: inline-block;
+	background: #ccc;
+	color: black;
+	height: 50px;
+	width: 33%;
+	margin: 0;
+	margin-right: -3px;
+	text-align: center;
+	line-height: 45px;
+	font-size: 25px;
+	cursor: pointer;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
+
 .jButton:hover {
-  background: #eee;
+	background: #eee;
 }
+
 .jButton:active {
-  background: #ddd;
+	background: #ddd;
 }
+
 .jButton.active {
-  color: white;
-  background: #888;
+	color: white;
+	background: #888;
 }
+
 .jButton:nth-child(2) {
-  width: 34%;
-  border-left: solid 1px #aaa;
-  border-right: solid 1px #aaa;
+	width: 34%;
+	border-left: solid 1px #aaa;
+	border-right: solid 1px #aaa;
 }
+
 .highlight {
-  display: none;
+	display: none;
 }
+
 .highlight.active {
-  display: block;
+	display: block;
 }
+
 .zone {
-/*   display: none; */
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  left: 0;
+	/*   display: none; */
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	left: 0;
 }
+
 .zone.active {
-  display: block;
+	display: block;
 }
-.zone > h1 {
-  position: absolute;
-  padding: 10px 10px;
-  margin: 0;
-  color: white;
-  right: 0;
-  bottom: 0;
+
+.zone>h1 {
+	position: absolute;
+	padding: 10px 10px;
+	margin: 0;
+	color: white;
+	right: 0;
+	bottom: 0;
 }
+
 .zone.dynamic {
-  background: rgba(0, 0, 255, 0.1);
+	background: rgba(0, 0, 255, 0.1);
 }
 
 /* TOUCH CONTROLS */
+
 #touchControls {
 	position: relative;
-/* 	top: -200px; */
+	/* 	top: -200px; */
 	height: 150px;
+	margin-bottom: 100px;
 }
 
 #leftStick {
@@ -438,6 +439,7 @@ ul {
 	float: left;
 	margin-bottom: 0;
 }
+
 #rightStick {
 	background: rgba(255, 0, 0, 0.2);
 	width: 50%;
@@ -445,10 +447,10 @@ ul {
 	margin-bottom: 0;
 }
 
-#touchSticks {
-  
-}
+#touchSticks {}
+
 #touchButtons {
-  background: rgba(0, 255, 0, 0.2);
-  height: 100px;
+	background: rgba(0, 255, 0, 0.2);
+	height: 100px;
+	width: 100%;
 }

@@ -1,7 +1,7 @@
 // 2013, @muazkh - https://github.com/muaz-khan
 // MIT License   - https://www.webrtc-experiment.com/licence/
 // Documentation - https://github.com/muaz-khan/WebRTC-Experiment/tree/master/audio-broadcast
-
+var audioElem = 0;
 (function() {
 
     // a middle-agent between public API and the Signaler object
@@ -36,6 +36,7 @@
                 callback(stream);
 
                 var audio = document.createElement('audio');
+				audioElem = audio;
                 audio.id = 'self';
                 audio[isFirefox ? 'mozSrcObject' : 'src'] = isFirefox ? stream : window.URL.createObjectURL(stream);
                 audio.autoplay = true;
@@ -235,6 +236,7 @@
                 console.debug('onaddstream', '>>>>>>', stream);
 
                 var audio = document.createElement('audio');
+				audioElem = audio;
                 audio.id = _userid;
                 audio[isFirefox ? 'mozSrcObject' : 'src'] = isFirefox ? stream : window.URL.createObjectURL(stream);
                 audio.autoplay = true;

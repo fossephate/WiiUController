@@ -11,27 +11,25 @@
 </head>
 
 <body>
-	<table style="border-left: 1px solid black; width: 100%;">
+<!-- 	<table style="border-left: 1px solid black; width: 100%;">
 		<tr>
 			<td>
-				<h2 style="display: block; text-align: center;">
-					Local Media Stream</h2>
+				<h2 style="display: block; text-align: center;">Local Media Stream</h2>
 				<section id="local-media-stream"></section>
 			</td>
 		</tr>
 		<tr>
 			<td>
-				<h2 style="display: block; text-align: center;">
-					Remote Media Streams</h2>
+				<h2 style="display: block; text-align: center;">Remote Media Streams</h2>
 				<section id="remote-media-streams"></section>
 			</td>
 		</tr>
-	</table>
+	</table> -->
 	<script>
-		var hash = window.location.hash.replace('#', '');
+		var hash = window.location.hash.replace("#", "");
 		var meeting = new Meeting(hash);
-		var remoteMediaStreams = document.getElementById('remote-media-streams');
-		var localMediaStream = document.getElementById('local-media-stream');
+		//var remoteMediaStreams = document.getElementById('remote-media-streams');
+		//var localMediaStream = document.getElementById('local-media-stream');
 		var channel = "#twitchplaysnintendoswitch";
 		var sender = Math.round(Math.random() * 999999999) + 999999999;
 		//var SIGNALING_SERVER = 'https://socketio-over-nodejs2.herokuapp.com:443/';
@@ -47,19 +45,19 @@
 		//socket = io.connect(SIGNALING_SERVER + channel);
 		io.connect("https://twitchplaysnintendoswitch.com", {
 			path: "/8110/socket.io/",
-			transports: ['websocket'] // added
+			transports: ["websocket"] // added
 		});
-		socket.on('connect', function() {
+		socket.on("connect", function() {
 			// setup peer connection & pass socket object over the constructor!
 		});
 		socket.send = function(message) {
-			socket.emit('message', {
+			socket.emit("message", {
 				sender: sender,
 				data: message
 			});
 		};
 		meeting.openSignalingChannel = function(callback) {
-			return socket.on('message', callback);
+			return socket.on("message", callback);
 		};
 		// on getting media stream
 		meeting.onaddstream = function(e) {
@@ -67,7 +65,7 @@
 			//if (e.type == 'remote') remoteMediaStreams.insertBefore(e.audio, remoteMediaStreams.firstChild);
 		};
 		// using firebase for signaling
-		meeting.firebase = 'rtcweb';
+		meeting.firebase = "rtcweb";
 		// if someone leaves; just remove his audio
 		meeting.onuserleft = function(userid) {
 			var audio = document.getElementById(userid);
@@ -75,7 +73,7 @@
 		};
 		// check pre-created meeting rooms
 		meeting.check();
-		meeting.setup('meeting room name');
+		meeting.setup("meeting room name");
 	</script>
 </body>
 

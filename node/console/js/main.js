@@ -10,6 +10,8 @@ var gamepadTimer;
 var touchTimer;
 var lagless1Break = false;
 var audio = true;
+var controlQueue = [];
+var twitchUsername = null;
 
 var keyboardLayout = {};
 keyboardLayout.LYU = "W";
@@ -192,8 +194,15 @@ function sendControllerState() {
 	} else {
 		oldControllerState = newControllerState;
 	}
+	
+	if(controlQueue.indexOf(twitchUsername) == -1) {
+		socket.emit("requestTurn");
+	}
+	
 	console.log(newControllerState);
+	//if(controlQueue[0] == twitchUsername) {
 	socket.emit("sendControllerState", newControllerState);
+	//}
 }
 
 
@@ -209,7 +218,7 @@ function sendKeyboardInputs() {
 	if (authCookie == null) {
 		$("#keyboardController").prop("checked", false);
 		alert("You need to connect to twitch!");
-		setCookie("AttemptedAuth", 1, 60);
+		//setCookie("AttemptedAuth", 1, 60);
 		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
 	}
@@ -591,7 +600,7 @@ function sendGamePadInputs() {
 	if (authCookie == null) {
 		$("#keyboardController").prop("checked", false);
 		alert("You need to connect to twitch!");
-		setCookie("AttemptedAuth", 1, 60);
+		//setCookie("AttemptedAuth", 1, 60);
 		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
 	}
@@ -813,7 +822,7 @@ function sendTouchInputs() {
 	if (authCookie == null) {
 		$("#touchControlsCheckbox").prop("checked", false);
 		alert("You need to connect to twitch!");
-		setCookie("AttemptedAuth", 1, 60);
+		//setCookie("AttemptedAuth", 1, 60);
 		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
 	}
@@ -847,16 +856,16 @@ touchTimer = setInterval(sendTouchInputs, 10);
 
 /* AUTH  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
 $("#authenticateButton").on("click", function(event) {
-	setCookie("AttemptedAuth", 1, 60);
+	//setCookie("AttemptedAuth", 1, 60);
 });
 
 
 var authCookie = getCookie("TwitchPlaysNintendoSwitch");
 var attemptedAuth = getCookie("AttemptedAuth");
 
-if (attemptedAuth && !authCookie) {
-	window.location.href = "https://twitchplaysnintendoswitch.com/8110/";
-}
+// if (attemptedAuth && !authCookie) {
+// 	window.location.href = "https://twitchplaysnintendoswitch.com/8110/";
+// }
 if (authCookie != null) {
 	socket.emit("registerUsername", authCookie);
 	$("#authenticateButton").remove();
@@ -1060,4 +1069,21 @@ $("#toggleAudio").on("click", function() {
 		icon.addClass("glyphicon-volume-off");
 		audioElem.pause();
 	}
+});
+
+
+/* QUEUE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+socket.on("controlQueue", function(data) {
+	controlQueue = data.queue;
+	$("#controlQueue").empty();
+	
+	for (var i = 0; i < controlQueue.length; i++) {
+		var username = controlQueue[i];
+		var html = "<li class='list-group-item'>" + username + "</li>";
+		$("#controlQueue").append(html);
+	}
+});
+
+socket.on("twitchUsername", function(data) {
+	twitchUsername = data;
 });

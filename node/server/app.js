@@ -114,7 +114,7 @@ app.get("/auth/twitch", passport.authenticate("twitch", {
 
 // Set route for OAuth redirect
 app.get("/auth/twitch/callback", passport.authenticate("twitch", {
-	successRedirect: "/",
+	successRedirect: "/8110/",
 	failureRedirect: "/"
 }));
 
@@ -138,6 +138,7 @@ window.location.href = "https://twitchplaysnintendoswitch.com";
 app.get("/", function(req, res) {
 	if (req.session && req.session.passport && req.session.passport.user) {
 		console.log(req.session.passport.user);
+		console.log(req.user);
 		var time = 60 * 24 * 60 * 1000; // 1 day
 		//var time = 15*60*1000;// 15 minutes
 		var username = req.session.passport.user.display_name;
@@ -259,37 +260,10 @@ function Client(socket) {
 
 	//this.socket = socket;
 	this.id = socket.id;
-	//this.ip = socket.request.connection.remoteAddress;
-	//this.ip = socket.conn.transport.socket._socket.remoteAddress;
-	//console.log(socket.conn.transport.socket._socket);
-	//console.log(socket.handshake);
-	//console.log(socket.request.connection.remoteAddress);
-	//console.log(socket.handshake.headers["x-real-ip"]);
-	//console.log(socket.conn.transport.socket._socket.remoteAddress);
-	//console.log(socket.conn.transport.socket);
-	//console.log(socket.handshake.headers);
-	this.hashedIP = "unknown";
 	this.name = "none";
 	this.username = null;
 
 	this.isController = false;
-
-
-
-	// 	this.download = function(socket, url, filename) {
-	// 		var objectToSend = {};
-	// 		objectToSend.url = url;
-	// 		if (typeof(filename) != "undefined") {
-	// 			objectToSend.filename = filename;
-	// 		}
-	// 		socket.broadcast.to(this.id).emit("dl", objectToSend);
-	// 	};
-
-	// 	this.execute = function(socket, filename) {
-	// 		var objectToSend = {};
-	// 		objectToSend.filename = filename;
-	// 		socket.broadcast.to(this.id).emit("ex", objectToSend);
-	// 	};
 
 	this.getImage = function(q) {
 		var objectToSend = {};
@@ -332,6 +306,11 @@ function Client(socket) {
 
 
 var clients = [];
+var channels = {};
+var controlQueue = [];
+var twitch_subscribers = ["beanjr_yt"];
+var currentTurnUsername = null;
+var turnDuration = 30000;
 
 var controller = null;
 
@@ -389,16 +368,16 @@ function getImageFromUser3(user, x1, y1, x2, y2, quality, scale) {
 
 //var numClients = 0;
 
-var channels = {};
 
-io.set('transports', [
-	'polling',
-	'websocket',
-	'xhr-polling',
-	'jsonp-polling'
+
+io.set("transports", [
+	"polling",
+	"websocket",
+	"xhr-polling",
+	"jsonp-polling"
 ]);
 
-io.on('connection', function(socket) {
+io.on("connection", function(socket) {
 
 	//console.log("USER CONNECTED");
 	//numClients += 1;
@@ -427,11 +406,42 @@ io.on('connection', function(socket) {
 
 		//clients[index].username = data;
 		clients[index].username = usernameDB[data];
+		socket.emit("twitchUsername", clients[index].username);
+	});
+	
+	/* 2ND AUTH METHOD @@@@@@@@@@@@@@@@@@@@@*/
+	// CLIENT SIDE:
+// 	socket.emit("twitchToken", someTwitchToken);
+// 	socket.on("hashedUsername", function(data) {
+// 		var hashedUsername = data;
+// 		socket.emit("registerUsername", hashedUsername);
+// 	});
+	socket.on("twitchToken", function(data) {
+		request({
+			url: "https://id.twitch.tv/oauth2/validate",
+			headers: {
+			   Authorization: "OAuth " + data,
+			}
+		}, function(error, response, body) {
+			
+			var body2 = JSON.parse(body);
+			
+			if(body2.message == "invalid access token") {
+				return;
+			} else {
+				var username = body2.login;
+				var secret = config.HASH_SECRET;
+				var hashedUsername = crypto.createHmac("sha256", secret).update(username).digest("hex");
+				usernameDB[hashedUsername] = username;
+				localStorage.setItem("db", JSON.stringify(usernameDB));
+				socket.emit("hashedUsername", hashedUsername);
+			}
+		});
 	});
 
 
 	socket.on("listAll", function() {
-		//socket.broadcast.emit("registerNames");
+		
 		io.emit("registerNames");
 
 		var names = [];
@@ -531,11 +541,15 @@ io.on('connection', function(socket) {
 		if (client.username == null) {
 			return;
 		}
-
+		
+		if(controlQueue.length == 0) {return;}
+		currentTurnUsername = controlQueue[0];
+		if(client.username != currentTurnUsername) {return;}
+		
+		
 		if (controller != null) {
 			io.to(controller.id).emit("controllerState", data);
 		}
-		
 		io.emit("current player", client.username);
 	});
 
@@ -558,16 +572,26 @@ io.on('connection', function(socket) {
 		client.isController = true;
 		controller = client;
 	});
-
+	
+	/* QUEUE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+	socket.on("requestTurn", function() {
+		var index = findClientByID(socket.id);
+		if (index == -1) {return;}
+		client = clients[index];
+		if(client.username == null) {return;}
+		
+		if(controlQueue.indexOf(client.username) == -1) {
+			controlQueue.push(client.username);
+			socket.emit("controlQueue", {queue: controlQueue});
+		}
+	});
 
 
 // 	socket.on("chat message", function(msg) {
-
 // 		if (typeof(msg) != "string") {
 // 			console.log("not a string!");
 // 			return;
 // 		}
-
 // 		var index = findClientByID(socket.id);
 // 		var client = clients[index];
 // 		var db = value;
@@ -583,7 +607,7 @@ io.on('connection', function(socket) {
 	});
 
 
-	socket.on('disconnect', function() {
+	socket.on("disconnect", function() {
 		console.log("disconnected")
 		var i = findClientByID(socket.id)
 		clients.splice(i, 1);
@@ -612,33 +636,31 @@ io.on('connection', function(socket) {
 
 
 	/* WebRTC @@@@@@@@@@@@@@@@@@@@@@@@ */
-
-
-
+	
 	socket.on("message", function(data) {
 		socket.broadcast.emit("message", data);
 	});
 
-	var initiatorChannel = '';
+	var initiatorChannel = "";
 	if (!io.isConnected) {
 		io.isConnected = true;
 	}
 
-	socket.on('new-channel', function(data) {
+	socket.on("new-channel", function(data) {
 		if (!channels[data.channel]) {
 			initiatorChannel = data.channel;
 		}
-
+		
 		channels[data.channel] = data.channel;
 		onNewNamespace(data.channel, data.sender);
 	});
 
-	socket.on('presence', function(channel) {
+	socket.on("presence", function(channel) {
 		var isChannelPresent = !!channels[channel];
-		socket.emit('presence', isChannelPresent);
+		socket.emit("presence", isChannelPresent);
 	});
 
-	socket.on('disconnect', function(channel) {
+	socket.on("disconnect", function(channel) {
 		if (initiatorChannel) {
 			delete channels[initiatorChannel];
 		}
@@ -647,25 +669,23 @@ io.on('connection', function(socket) {
 });
 
 function onNewNamespace(channel, sender) {
-	io.of('/' + channel).on('connection', function(socket) {
+	io.of("/" + channel).on("connection", function(socket) {
 		var username;
 		if (io.isConnected) {
 			io.isConnected = false;
-			socket.emit('connect', true);
+			socket.emit("connect", true);
 		}
-
-		socket.on('message', function(data) {
+		
+		socket.on("message", function(data) {
 			if (data.sender == sender) {
 				if (!username) username = data.data.sender;
-				console.log(data);
-
 				socket.broadcast.emit('message', data.data);
 			}
 		});
-
-		socket.on('disconnect', function() {
+		
+		socket.on("disconnect", function() {
 			if (username) {
-				socket.broadcast.emit('user-left', username);
+				socket.broadcast.emit("user-left", username);
 				username = null;
 			}
 		});
@@ -721,6 +741,21 @@ function onNewNamespace(channel, sender) {
 // }, 66.66666);
 
 
+function moveLine() {
+	if(controlQueue.length > 0) {
+		controlQueue.shift();
+		// stop the controller
+		if (controller != null) {
+			io.to(controller.id).emit("controllerState", "800000000000000 128 128 128 128");
+		}
+	}
+	io.emit("controlQueue", {queue: controlQueue});
+	setTimeout(moveLine, turnDuration);
+}
+moveLine();
+
+
+
 function stream() {
 	var user = "Matt";
 	var x1 = streamSettings.x1;
@@ -732,5 +767,4 @@ function stream() {
 	getImageFromUser3(user, x1, y1, x2, y2, quality, scale);
 	setTimeout(stream, 1000 / streamSettings.fps);
 }
-
 stream();

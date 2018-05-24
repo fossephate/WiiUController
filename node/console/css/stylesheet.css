@@ -454,3 +454,10 @@ ul {
 	height: 100px;
 	width: 100%;
 }
+
+
+/* control queue */
+#controlQueue {
+	overflow-y: auto;
+	max-height: 200px;
+}

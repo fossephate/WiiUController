@@ -20,7 +20,8 @@
 <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script> -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 <!-- <script src="js/bootstrap-slider.min.js"></script> -->
-<script src="js/jsmpg.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<!-- <script src="js/jsmpg.js"></script> -->
 <script src="js/http-live-player.js"></script>
 <script src="js/bootstrap-checkbox.min.js"></script>
 <script src="js/meeting-client.js"></script>
@@ -84,13 +85,6 @@
 					<div id="barUnderTheStream" class="well">
 						<div class="container4">
 							<div class="five">
-<!-- 								<div>
-									Control with keyboard / or a controller<input id="keyboardController" type="checkbox">
-								</div>
-								<div>
-									Touch Controls
-									<input id="touchControlsCheckbox" type="checkbox">
-								</div> -->
 								<ul class="list-group">
 									<li class="list-group-item">
 										Control with keyboard / or a controller<input id="keyboardController" type="checkbox">
@@ -101,18 +95,17 @@
 									</li>
 								</ul>
 							</div>
-<!-- 							<div class="checkbox">
-								Touch Controls
-								<input id="touchControlsCheckbox" type="checkbox">
-							</div> -->
+							
 							<div class="six">
 								<div id="currentPlayer" class="well">
 									Current Player:
 								</div>
-								Control Queue:
-								<ul id="controlQueue" class="list-group">
-									<li class="list-group-item">test</li>
-								</ul>
+								<div class="well">
+									Control Queue:<btn id="cancelTurn" type="button" class="btn btn-primary">Cancel Turn</btn>
+									<ul id="controlQueue" class="list-group">
+										<li class="list-group-item">empty</li>
+									</ul>
+								</div>
 							</div>
 						</div>
 					</div>

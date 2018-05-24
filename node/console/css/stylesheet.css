@@ -460,4 +460,5 @@ ul {
 #controlQueue {
 	overflow-y: auto;
 	max-height: 200px;
+	text-align: center;
 }

@@ -585,6 +585,18 @@ io.on("connection", function(socket) {
 			socket.emit("controlQueue", {queue: controlQueue});
 		}
 	});
+	socket.on("cancelTurn", function() {
+		var index = findClientByID(socket.id);
+		if (index == -1) {return;}
+		client = clients[index];
+		if(client.username == null) {return;}
+		
+		index = controlQueue.indexOf(client.username);
+		if(index > -1) {
+			controlQueue.splice(index, 1);
+			socket.emit("controlQueue", {queue: controlQueue});
+		}
+	});
 
 
 // 	socket.on("chat message", function(msg) {
@@ -742,7 +754,7 @@ function onNewNamespace(channel, sender) {
 
 
 function moveLine() {
-	if(controlQueue.length > 0) {
+	if(controlQueue.length > 1) {
 		controlQueue.shift();
 		// stop the controller
 		if (controller != null) {

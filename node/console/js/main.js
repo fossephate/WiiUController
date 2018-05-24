@@ -199,6 +199,11 @@ function sendControllerState() {
 		socket.emit("requestTurn");
 	}
 	
+	if(controlQueue[0] != twitchUsername && controlQueue.length > 0) {
+		swal("It's not your turn yet!");
+		return;
+	}
+	
 	console.log(newControllerState);
 	//if(controlQueue[0] == twitchUsername) {
 	socket.emit("sendControllerState", newControllerState);
@@ -217,7 +222,7 @@ function sendKeyboardInputs() {
 	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
 		$("#keyboardController").prop("checked", false);
-		alert("You need to connect to twitch!");
+		swal("You need to connect to twitch!");
 		//setCookie("AttemptedAuth", 1, 60);
 		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
@@ -599,7 +604,7 @@ function sendGamePadInputs() {
 	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
 		$("#keyboardController").prop("checked", false);
-		alert("You need to connect to twitch!");
+		swal("You need to connect to twitch!");
 		//setCookie("AttemptedAuth", 1, 60);
 		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
@@ -821,7 +826,7 @@ function sendTouchInputs() {
 	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
 		$("#touchControlsCheckbox").prop("checked", false);
-		alert("You need to connect to twitch!");
+		swal("You need to connect to twitch!");
 		//setCookie("AttemptedAuth", 1, 60);
 		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
@@ -1086,4 +1091,9 @@ socket.on("controlQueue", function(data) {
 
 socket.on("twitchUsername", function(data) {
 	twitchUsername = data;
+});
+
+
+$("#cancelTurn").on("click", function(event) {
+	socket.emit("cancelTurn");
 });

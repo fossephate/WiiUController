@@ -753,18 +753,34 @@ function onNewNamespace(channel, sender) {
 // }, 66.66666);
 
 
+var turnStartTime = Date.now();
+
+
 function moveLine() {
 	if(controlQueue.length > 1) {
 		controlQueue.shift();
+		currentTurnUsername = controlQueue[0];
 		// stop the controller
 		if (controller != null) {
 			io.to(controller.id).emit("controllerState", "800000000000000 128 128 128 128");
 		}
 	}
 	io.emit("controlQueue", {queue: controlQueue});
+	
+	turnStartTime = Date.now();
+	
 	setTimeout(moveLine, turnDuration);
 }
 moveLine();
+
+
+setInterval(function() {
+	var currentTime = Date.now();
+	var elapsedTime = currentTime - turnStartTime;
+	var timeLeft = turnDuration - elapsedTime;
+	
+	io.emit("turnTimeLeft", {timeLeft: timeLeft, username: currentTurnUsername});
+}, 500);
 
 
 

@@ -12,6 +12,8 @@ var lagless1Break = false;
 var audio = true;
 var controlQueue = [];
 var twitchUsername = null;
+var toggleDarkTheme = false;
+var timeLeft = 30000;
 
 var keyboardLayout = {};
 keyboardLayout.LYU = "W";
@@ -1093,7 +1095,79 @@ socket.on("twitchUsername", function(data) {
 	twitchUsername = data;
 });
 
+socket.on("turnTimeLeft", function(data) {
+	var timeLeft = data.timeLeft;
+	var timeLeft2 = parseInt(data.timeLeft / 1000);
+	
+	var percent = parseInt((timeLeft / 30000) * 100);
+	
+	var progressBar = $(".progress-bar");
+// 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(percent + "%");
+// 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(timeLeft2 + " seconds");
+	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(data.username + ": " + timeLeft2 + " seconds");
+});
+
 
 $("#cancelTurn").on("click", function(event) {
 	socket.emit("cancelTurn");
+});
+
+
+
+
+/* DARK THEME @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+
+$("#toggleTheme").on("click", function() {
+	toggleDarkTheme = !toggleDarkTheme;
+	if (toggleDarkTheme) {
+		var icon = $(".glyphicon-fire");
+		icon.removeClass("glyphicon-fire");
+		icon.addClass("glyphicon-certificate");
+		
+		$(".well").each(function() {
+			$(this).removeClass("well");
+			$(this).addClass("well-dark");
+		});
+		
+		$(".list-group-item").each(function() {
+			$(this).removeClass("list-group-item");
+			$(this).addClass("list-group-item-dark");
+		});
+		
+		$("body").addClass("dark");
+		
+		
+// ::-webkit-scrollbar { width: 8px; height: 3px;}
+// ::-webkit-scrollbar-button {  background-color: #666; }
+// ::-webkit-scrollbar-track {  background-color: #646464;}
+// ::-webkit-scrollbar-track-piece { background-color: #000;}
+// ::-webkit-scrollbar-thumb { height: 50px; background-color: #666; border-radius: 3px;}
+// ::-webkit-scrollbar-corner { background-color: #646464;}}
+// ::-webkit-resizer { background-color: #666;}
+// 		$("::-webkit-scrollbar").css("width: 8px; height: 3px;");
+// 		$("::-webkit-scrollbar-button").css("background-color: #666;");
+// 		$("::-webkit-scrollbar-track").css("background-color: #646464;");
+// 		$("::-webkit-scrollbar-track-piece").css("background-color: #000;");
+		
+// 		$("::-webkit-scrollbar-thumb").css("height: 50px; background-color: #666; border-radius: 3px;");
+// 		$("::-webkit-scrollbar-corner").css("background-color: #646464;");
+// 		$("::-webkit-resizer").css("background-color: #666;");
+		
+	} else {
+		var icon = $(".glyphicon-certificate");
+		icon.removeClass("glyphicon-certificate");
+		icon.addClass("glyphicon-fire");
+		
+		$(".well-dark").each(function() {
+			$(this).removeClass("well-dark");
+			$(this).addClass("well");
+		});
+		
+		$(".list-group-item-dark").each(function() {
+			$(this).removeClass("list-group-item-dark");
+			$(this).addClass("list-group-item");
+		});
+		
+		$("body").removeClass("dark");
+	}
 });

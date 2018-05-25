@@ -596,6 +596,16 @@ io.on("connection", function(socket) {
 			controlQueue.splice(index, 1);
 			socket.emit("controlQueue", {queue: controlQueue});
 		}
+		if(controlQueue.length > 1) {
+			currentTurnUsername = controlQueue[0];
+		} else {
+			currentTurnUsername = null;
+		}
+		
+		var currentTime = Date.now();
+		var elapsedTime = currentTime - turnStartTime;
+		var timeLeft = turnDuration - elapsedTime;
+		io.emit("turnTimeLeft", {timeLeft: timeLeft, username: currentTurnUsername});
 	});
 
 

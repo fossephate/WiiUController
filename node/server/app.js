@@ -11,6 +11,10 @@ var crypto = require("crypto");
 const storage = require("node-persist");
 const util = require("util");
 
+const WebSocketServer = require('ws').Server;
+const Splitter        = require('stream-split');
+const NALseparator    = new Buffer([0,0,0,1]);//NAL break
+
 
 // var streamSettings = {
 // 	x1: 255 - 1920,
@@ -199,7 +203,7 @@ app.get("/currentplayer/", function(req, res) {
 
 
 
-var controlsSite = '\
+var helpSite = '\
 <html>\
 	<style>\
 		.custom {\
@@ -210,14 +214,14 @@ var controlsSite = '\
 	</style>\
 	<!--   <marquee scrolldelay="0" scrollamount="10"> -->\
 	<div class="custom">\
-		Type !controls for controls\
+		Type !help for help\
 	</div>\
 	<!--   </marquee> -->\
 	<script>\
 	</script>\
 </html>';
-app.get("/controls/", function(req, res) {
-	res.send(controlsSite);
+app.get("/help/", function(req, res) {
+	res.send(helpSite);
 });
 
 
@@ -308,11 +312,12 @@ function Client(socket) {
 var clients = [];
 var channels = {};
 var controlQueue = [];
-var twitch_subscribers = ["beanjr_yt"];
+var twitch_subscribers = ["beanjr_yt", "fosseisanerd", "mrruidiazisthebestinsmo", "twitchplaysconsoles"];
 var currentTurnUsername = null;
 var turnDuration = 30000;
-
 var controller = null;
+var restartAvailable = true;
+var turnStartTime = Date.now();
 
 function findClientByID(id) {
 	var index = -1;
@@ -546,6 +551,12 @@ io.on("connection", function(socket) {
 		currentTurnUsername = controlQueue[0];
 		if(client.username != currentTurnUsername) {return;}
 		
+// 		if(twitch_subscribers.indexOf(currentTurnUsername) > -1) {
+// 			turnDuration = 60000;
+// 		} else {
+// 			turnDuration = 30000;
+// 		}
+		
 		
 		if (controller != null) {
 			io.to(controller.id).emit("controllerState", data);
@@ -582,6 +593,7 @@ io.on("connection", function(socket) {
 		
 		if(controlQueue.indexOf(client.username) == -1) {
 			controlQueue.push(client.username);
+			currentTurnUsername = controlQueue[0];
 			socket.emit("controlQueue", {queue: controlQueue});
 		}
 	});
@@ -605,7 +617,7 @@ io.on("connection", function(socket) {
 		var currentTime = Date.now();
 		var elapsedTime = currentTime - turnStartTime;
 		var timeLeft = turnDuration - elapsedTime;
-		io.emit("turnTimeLeft", {timeLeft: timeLeft, username: currentTurnUsername});
+		io.emit("turnTimeLeft", {timeLeft: timeLeft, username: currentTurnUsername, turnLength: turnDuration});
 	});
 
 
@@ -623,9 +635,19 @@ io.on("connection", function(socket) {
 // 	});
 
 	socket.on("restart", function() {
-		console.log("restarting");
+		if(restartAvailable) {
+			restartAvailable = false;
+			console.log("restarting");
+			io.emit("quit");
+			//io.emit("restart");
+		}
+	});
+	
+	socket.on("serverRestart", function() {
+		restartAvailable = false;
+		console.log("server restarting");
 		io.emit("quit");
-		//io.emit("restart");
+		process.exit();
 	});
 
 
@@ -636,17 +658,27 @@ io.on("connection", function(socket) {
 	});
 
 	socket.on("setQuality", function(data) {
+		
+		if(controlQueue.length == 0) {io.emit("setQuality", streamSettings.quality);return;}
+		currentTurnUsername = controlQueue[0];
+		if(client.username != currentTurnUsername) {io.emit("setQuality", streamSettings.quality);return;}
+		
 		streamSettings.quality = parseInt(data);
 		io.emit("setQuality", data);
 	});
 	socket.on("setScale", function(data) {
+		
+		if(controlQueue.length == 0) {io.emit("setScale", streamSettings.scale); return;}
+		currentTurnUsername = controlQueue[0];
+		if(client.username != currentTurnUsername) {io.emit("setScale", streamSettings.scale); return;}
+		
 		streamSettings.scale = parseInt(data);
 		io.emit("setScale", data);
 	});
-	socket.on("setFPS", function(data) {
-		streamSettings.fps = parseInt(data);
-		io.emit("setFPS", data);
-	});
+// 	socket.on("setFPS", function(data) {
+// 		streamSettings.fps = parseInt(data);
+// 		io.emit("setFPS", data);
+// 	});
 
 	// 	socket.on("setCoords", function(data) {
 	// 		streamSettings.x1 = data.x1 || streamSettings.x1;
@@ -763,7 +795,11 @@ function onNewNamespace(channel, sender) {
 // }, 66.66666);
 
 
-var turnStartTime = Date.now();
+setInterval(function() {
+	restartAvailable = true;
+}, 4000);
+
+
 
 
 function moveLine() {
@@ -772,7 +808,7 @@ function moveLine() {
 		currentTurnUsername = controlQueue[0];
 		// stop the controller
 		if (controller != null) {
-			io.to(controller.id).emit("controllerState", "800000000000000 128 128 128 128");
+			io.to(controller.id).emit("controllerState", "800000000000000 127 127 127 127");
 		}
 	}
 	io.emit("controlQueue", {queue: controlQueue});
@@ -789,7 +825,7 @@ setInterval(function() {
 	var elapsedTime = currentTime - turnStartTime;
 	var timeLeft = turnDuration - elapsedTime;
 	
-	io.emit("turnTimeLeft", {timeLeft: timeLeft, username: currentTurnUsername});
+	io.emit("turnTimeLeft", {timeLeft: timeLeft, username: currentTurnUsername, turnLength: turnDuration});
 }, 500);
 
 

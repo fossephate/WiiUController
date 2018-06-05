@@ -13,7 +13,11 @@ var audio = true;
 var controlQueue = [];
 var twitchUsername = null;
 var toggleDarkTheme = false;
+var toggleChat = false;
 var timeLeft = 30000;
+var turnLength = 30000;
+var turnUsername = null;
+var lastCurrentTime = 0;
 
 var keyboardLayout = {};
 keyboardLayout.LYU = "W";
@@ -28,19 +32,20 @@ keyboardLayout.A = "right";
 keyboardLayout.B = "down";
 keyboardLayout.X = "up";
 keyboardLayout.Y = "left";
-keyboardLayout.DUP = "T";
+keyboardLayout.DUp = "T";
 keyboardLayout.DDown = "G";
 keyboardLayout.DLeft = "F";
 keyboardLayout.DRight = "H";
 keyboardLayout.LStick = "R";
 keyboardLayout.RStick = "Y";
 keyboardLayout.L = "U";
-keyboardLayout.L = "U";
 keyboardLayout.ZL = "Q";
 keyboardLayout.R = "O";
 keyboardLayout.ZR = "E";
 keyboardLayout.Minus = "-";
-
+keyboardLayout.Plus = "=";
+keyboardLayout.Capture = "1";
+keyboardLayout.Home = "2";
 
 function getMeta(url, callback) {
 	var img = new Image();
@@ -50,31 +55,94 @@ function getMeta(url, callback) {
 	}
 }
 
-function getLatestImage() {
-	$("#screen").load("/8110/img/ #screenshot");
+// function getLatestImage() {
+// 	$("#screen").load("/8110/img/ #screenshot");
+// // 	document.getElementById("screen2").contentDocument.location.reload(true);
 
-	if (typeof $("#screen")[0].children[0] != "undefined") {
-		var src = $("#screen")[0].children[0].src;
+// 	if (typeof $("#screen")[0].children[0] != "undefined") {
+// 		var src = $("#screen")[0].children[0].src;
 // 		if(src == "data:image/jpeg;base64,") {
 // 			socket.emit("restart");
 // 		}
-	}
+// 	}
 
+// 	if (lagless1Break) {
+// 		return;
+// 	}
+
+// // 	var fps = parseInt($("#fpsSlider").val());
+// // 	var timeToSleep = 1000 / fps;
+// // 	setTimeout(getLatestImage, timeToSleep);
+// 	requestAnimationFrame(getLatestImage);
+// }
+
+
+function updateImage() {
+	$("#screen").load("/8110/img/ #screenshot");
+	if (typeof $("#screen")[0].children[0] != "undefined") {
+		var src = $("#screen")[0].children[0].src;
+		if(src == "data:image/jpeg;base64,") {
+			socket.emit("restart");
+		}
+	}
+}
+
+var stats = new Stats();
+stats.showPanel(0);// 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom);
+
+
+var now;
+var elapsed;
+var fpsInterval = 1000 / 15;
+var then = Date.now();
+var startTime = then;
+
+function getLatestImage() {
+	
 	if (lagless1Break) {
 		return;
 	}
+	
+    requestAnimationFrame(getLatestImage);
 
-	var fps = parseInt($("#fpsSlider").val());
-	var timeToSleep = 1000 / fps;
-	setTimeout(getLatestImage, timeToSleep);
+    now = Date.now();
+    elapsed = now - then;
+	
+    if (elapsed > fpsInterval) {	
+		
+		var fps = parseInt($("#fpsSlider").val());
+		fpsInterval = 1000 / fps;
+		
+        then = now - (elapsed % fpsInterval);
+		stats.begin();
+		updateImage();
+		stats.end();
+    }
 }
 
-//getLatestImage();
+// socket.on("viewImage", function(data) {
+	
+// 	//requestAnimationFrame(function() {
 
+// 		stats.begin();
+	
+// 		var src = "data:image/jpeg;base64," + data.src;
+// 	// 	if(src == "data:image/jpeg;base64,") {
+// 	// 		socket.emit("restart");
+// 	// 	}
+// 		var image = new Image();
+// 		image.src = src;
+// 		image.style = "max-width:100%; height:auto;";
+// 		//image.style = "width:120%; height:auto;";
+// 		image.id = "screenshot";
 
-setInterval(function() {
-	globalEventTimer = false;
-}, 100);
+// // 		$("#screen").empty();
+// // 		$("#screen").append(image);
+// 		$("#screenshot")[0].replaceWith(image);
+// 		stats.end();
+// 	//});
+// });
 
 /*    CHAT */
 $("#chatForm").on("submit", function() {
@@ -103,12 +171,12 @@ var gamepadCounter = 0;
 controller = {};
 controller.btns = {};
 controller.LStick = {
-	x: 128,
-	y: 128
+	x: 127,
+	y: 127
 };
 controller.RStick = {
-	x: 128,
-	y: 128
+	x: 127,
+	y: 127
 };
 
 controller.btns.up = false;
@@ -135,10 +203,10 @@ controller.reset = function() {
 	for (let prop in controller.btns) {
 		controller.btns[prop] = false;
 	}
-	controller.LStick.x = 128;
-	controller.LStick.y = 128;
-	controller.RStick.x = 128;
-	controller.RStick.y = 128;
+	controller.LStick.x = 127;
+	controller.LStick.y = 127;
+	controller.RStick.x = 127;
+	controller.RStick.y = 127;
 }
 
 var oldControllerState = "";
@@ -203,6 +271,7 @@ function sendControllerState() {
 	
 	if(controlQueue[0] != twitchUsername && controlQueue.length > 0) {
 		swal("It's not your turn yet!");
+		//$("#turnTimerBar").effect("shake", {direction: "left", distance: 10});
 		return;
 	}
 	
@@ -218,15 +287,15 @@ var wasPressedKeyCodes = [];
 
 function sendKeyboardInputs() {
 
-	if (!document.getElementById("keyboardController").checked) {
+	if (!document.getElementById("keyboardControllerCheckbox").checked) {
 		return;
 	}
 	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
-		$("#keyboardController").prop("checked", false);
+		$("#keyboardControllerCheckbox").prop("checked", false);
 		swal("You need to connect to twitch!");
 		//setCookie("AttemptedAuth", 1, 60);
-		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
+		//window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
 	}
 	
@@ -235,22 +304,22 @@ function sendKeyboardInputs() {
 	if (key.isPressed(keyboardLayout.LYU)) {
 		controller.LStick.y = 255;
 	} else if(key.wasPressed(keyboardLayout.LYU, wasPressedKeyCodes)) {
-		controller.LStick.y = 128;
+		controller.LStick.y = 127;
 	}
 	if (key.isPressed(keyboardLayout.LYD)) {
 		controller.LStick.y = 0;
 	} else if(key.wasPressed(keyboardLayout.LYD, wasPressedKeyCodes)) {
-		controller.LStick.y = 128;
+		controller.LStick.y = 127;
 	}
 	if (key.isPressed(keyboardLayout.LXL)) {
 		controller.LStick.x = 0;
 	} else if(key.wasPressed(keyboardLayout.LXL, wasPressedKeyCodes)) {
-		controller.LStick.x = 128;
+		controller.LStick.x = 127;
 	}
 	if (key.isPressed(keyboardLayout.LXR)) {
 		controller.LStick.x = 255;
 	} else if(key.wasPressed(keyboardLayout.LXR, wasPressedKeyCodes)) {
-		controller.LStick.x = 128;
+		controller.LStick.x = 127;
 	}
 
 	if (key.isPressed(keyboardLayout.X)) {
@@ -276,6 +345,7 @@ function sendKeyboardInputs() {
 
 	if (key.isPressed(keyboardLayout.DUp)) {
 		controller.btns.up = 1;
+		console.log("dup");
 	} else if(key.wasPressed(keyboardLayout.DUp, wasPressedKeyCodes)) {
 		controller.btns.up = 0;
 	}
@@ -298,28 +368,44 @@ function sendKeyboardInputs() {
 	if (key.isPressed(keyboardLayout.RYU)) {
 		controller.RStick.y = 255;
 	} else if(key.wasPressed(keyboardLayout.RYU, wasPressedKeyCodes)) {
-		controller.RStick.y = 128;
+		controller.RStick.y = 127;
 	}
 	if (key.isPressed(keyboardLayout.RYD)) {
 		controller.RStick.y = 0;
 	} else if(key.wasPressed(keyboardLayout.RYD, wasPressedKeyCodes)) {
-		controller.RStick.y = 128;
+		controller.RStick.y = 127;
 	}
 	if (key.isPressed(keyboardLayout.RXL)) {
 		controller.RStick.x = 0;
 	} else if(key.wasPressed(keyboardLayout.RXL, wasPressedKeyCodes)) {
-		controller.RStick.x = 128;
+		controller.RStick.x = 127;
 	}
 	if (key.isPressed(keyboardLayout.RXR)) {
 		controller.RStick.x = 255;
 	} else if(key.wasPressed(keyboardLayout.RXR, wasPressedKeyCodes)) {
-		controller.RStick.x = 128;
+		controller.RStick.x = 127;
 	}
 
 	if (key.isPressed(keyboardLayout.Minus)) {
 		controller.btns.minus = 1;
 	} else if(key.wasPressed(keyboardLayout.Minus, wasPressedKeyCodes)) {
 		controller.btns.minus = 0;
+	}
+	if (key.isPressed(keyboardLayout.Plus)) {
+		controller.btns.plus = 1;
+	} else if(key.wasPressed(keyboardLayout.Plus, wasPressedKeyCodes)) {
+		controller.btns.plus = 0;
+	}
+	
+	if (key.isPressed(keyboardLayout.Capture)) {
+		controller.btns.capture = 1;
+	} else if(key.wasPressed(keyboardLayout.Capture, wasPressedKeyCodes)) {
+		controller.btns.capture = 0;
+	}
+	if (key.isPressed(keyboardLayout.Home)) {
+		controller.btns.home = 1;
+	} else if(key.wasPressed(keyboardLayout.Home, wasPressedKeyCodes)) {
+		controller.btns.home = 0;
 	}
 
 	if (key.isPressed(keyboardLayout.L)) {
@@ -450,6 +536,12 @@ gamepad.on('press', 'select', e => {
 gamepad.on('release', 'select', e => {
 	controller.btns.minus = 0;
 });
+gamepad.on('press', 'start', e => {
+	controller.btns.plus = 1;
+});
+gamepad.on('release', 'start', e => {
+	controller.btns.plus = 0;
+});
 
 
 
@@ -491,11 +583,11 @@ gamepad.on('hold', 'stick_axis_left', e => {
 	controller.LStick.x = parseInt(x);
 	controller.LStick.y = parseInt(y);
 	var thresh = parseInt($("#threshold").text());
-	if (Math.abs(128 - controller.LStick.x) < thresh) {
-		controller.LStick.x = 128;
+	if (Math.abs(127 - controller.LStick.x) < thresh) {
+		controller.LStick.x = 127;
 	}
-	if (Math.abs(128 - controller.LStick.y) < thresh) {
-		controller.LStick.y = 128;
+	if (Math.abs(127 - controller.LStick.y) < thresh) {
+		controller.LStick.y = 127;
 	}
 });
 gamepad.on('press', 'stick_axis_left', e => {
@@ -508,11 +600,11 @@ gamepad.on('press', 'stick_axis_left', e => {
 	controller.LStick.x = parseInt(x);
 	controller.LStick.y = parseInt(y);
 	var thresh = parseInt($("#threshold").text());
-	if (Math.abs(128 - controller.LStick.x) < thresh) {
-		controller.LStick.x = 128;
+	if (Math.abs(127 - controller.LStick.x) < thresh) {
+		controller.LStick.x = 127;
 	}
-	if (Math.abs(128 - controller.LStick.y) < thresh) {
-		controller.LStick.y = 128;
+	if (Math.abs(127 - controller.LStick.y) < thresh) {
+		controller.LStick.y = 127;
 	}
 });
 gamepad.on('release', 'stick_axis_left', e => {
@@ -525,11 +617,11 @@ gamepad.on('release', 'stick_axis_left', e => {
 	controller.LStick.x = parseInt(x);
 	controller.LStick.y = parseInt(y);
 	var thresh = parseInt($("#threshold").text());
-	if (Math.abs(128 - controller.LStick.x) < thresh) {
-		controller.LStick.x = 128;
+	if (Math.abs(127 - controller.LStick.x) < thresh) {
+		controller.LStick.x = 127;
 	}
-	if (Math.abs(128 - controller.LStick.y) < thresh) {
-		controller.LStick.y = 128;
+	if (Math.abs(127 - controller.LStick.y) < thresh) {
+		controller.LStick.y = 127;
 	}
 });
 gamepad.on('hold', 'stick_axis_right', e => {
@@ -542,11 +634,11 @@ gamepad.on('hold', 'stick_axis_right', e => {
 	controller.RStick.x = parseInt(x);
 	controller.RStick.y = parseInt(y);
 	var thresh = parseInt($("#threshold").text());
-	if (Math.abs(128 - controller.RStick.x) < thresh) {
-		controller.RStick.x = 128;
+	if (Math.abs(127 - controller.RStick.x) < thresh) {
+		controller.RStick.x = 127;
 	}
-	if (Math.abs(128 - controller.RStick.y) < thresh) {
-		controller.RStick.y = 128;
+	if (Math.abs(127 - controller.RStick.y) < thresh) {
+		controller.RStick.y = 127;
 	}
 });
 gamepad.on('press', 'stick_axis_right', e => {
@@ -559,11 +651,11 @@ gamepad.on('press', 'stick_axis_right', e => {
 	controller.RStick.x = parseInt(x);
 	controller.RStick.y = parseInt(y);
 	var thresh = parseInt($("#threshold").text());
-	if (Math.abs(128 - controller.RStick.x) < thresh) {
-		controller.RStick.x = 128;
+	if (Math.abs(127 - controller.RStick.x) < thresh) {
+		controller.RStick.x = 127;
 	}
-	if (Math.abs(128 - controller.RStick.y) < thresh) {
-		controller.RStick.y = 128;
+	if (Math.abs(127 - controller.RStick.y) < thresh) {
+		controller.RStick.y = 127;
 	}
 });
 gamepad.on('release', 'stick_axis_right', e => {
@@ -576,11 +668,11 @@ gamepad.on('release', 'stick_axis_right', e => {
 	controller.RStick.x = parseInt(x);
 	controller.RStick.y = parseInt(y);
 	var thresh = parseInt($("#threshold").text());
-	if (Math.abs(128 - controller.RStick.x) < thresh) {
-		controller.RStick.x = 128;
+	if (Math.abs(127 - controller.RStick.x) < thresh) {
+		controller.RStick.x = 127;
 	}
-	if (Math.abs(128 - controller.RStick.y) < thresh) {
-		controller.RStick.y = 128;
+	if (Math.abs(127 - controller.RStick.y) < thresh) {
+		controller.RStick.y = 127;
 	}
 });
 
@@ -600,15 +692,15 @@ gamepad.on('release', 'stick_button_right', e => {
 
 function sendGamePadInputs() {
 
-	if (!document.getElementById("keyboardController").checked) {
+	if (!document.getElementById("keyboardControllerCheckbox").checked) {
 		return;
 	}
 	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
-		$("#keyboardController").prop("checked", false);
+		$("#keyboardControllerCheckbox").prop("checked", false);
 		swal("You need to connect to twitch!");
 		//setCookie("AttemptedAuth", 1, 60);
-		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
+		//window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
 	}
 	//controller.reset();
@@ -617,6 +709,40 @@ function sendGamePadInputs() {
 }
 
 
+
+/* more gamepad support */
+// var gamepads = {};
+
+// function gamepadHandler(event, connecting) {
+// 	var gamepad = event.gamepad;
+// 	// Note:
+// 	// gamepad === navigator.getGamepads()[gamepad.index]
+
+// 	if (connecting) {
+// 		gamepads[gamepad.index] = gamepad;
+// 	} else {
+// 		delete gamepads[gamepad.index];
+// 	}
+// }
+
+
+// function pollGamepads() {
+// 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+// 	for (var i = 0; i < gamepads.length; i++) {
+// 		var gp = gamepads[i];
+// 		if (gp) {
+// 			//console.log(gp.axes[4] + " " + gp.axes[9]);
+// 			console.log(gp);
+// // 			gamepadInfo.innerHTML = "Gamepad connected at index " + gp.index + ": " + gp.id +
+// // 				". It has " + gp.buttons.length + " buttons and " + gp.axes.length + " axes.";
+// // 			clearInterval(interval);
+// 		}
+// 	}
+// }
+// setInterval(pollGamepads, 1000);
+
+// window.addEventListener("gamepadconnected", function(e) { gamepadHandler(e, true); }, false);
+// window.addEventListener("gamepaddisconnected", function(e) { gamepadHandler(e, false); }, false);
 
 
 
@@ -686,11 +812,11 @@ $("#keyboardLayoutConfig").on('click', function(e) {
 	}
 });
 
-$('#keyboardController').checkboxpicker({
-	html: true,
-	offLabel: '<span class="glyphicon glyphicon-remove">',
-	onLabel: '<span class="glyphicon glyphicon-ok">'
-});
+// $('#keyboardController').checkboxpicker({
+// 	html: true,
+// 	offLabel: '<span class="glyphicon glyphicon-remove">',
+// 	onLabel: '<span class="glyphicon glyphicon-ok">'
+// });
 
 
 
@@ -713,8 +839,43 @@ var realWidth = $("#buttonsCanvas")[0].width;
 var realHeight = $("#buttonsCanvas")[0].height;
 var halfWidth = $("#buttonsCanvas")[0].width/2;
 var halfHeight = $("#buttonsCanvas")[0].height/2;
-ctx.fillStyle = "#FF0000";
-ctx.fillRect(halfWidth+(halfWidth/2)-25,0,50,50);
+// ctx.fillStyle = "#FF0000";
+// ctx.fillRect(halfWidth+(halfWidth/2)-25,0,50,50);
+
+function touchButton(x, y, width, height, color, button) {
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	this.color = color;
+	this.button = button;
+	
+	this.x2 = this.x + this.width;
+	this.y2 = this.y + this.height;
+
+	
+	
+	this.isPressed = function(X, Y) {
+// 		console.log(X + " " + Y);
+// 		console.log(this.x + "." + this.y);
+		if(X >= this.x && X <= this.x2) {
+			if(Y >= this.y && Y <= this.y2) {
+				console.log(this.button);
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	this.draw = function() {
+		ctx.fillStyle = this.color;
+		ctx.fillRect(this.x, this.y, this.width, this.height);
+	}
+	
+	return this;
+}
+
+
 
 
 function touchStart(event) {
@@ -724,23 +885,110 @@ function touchStart(event) {
 			var touch = event.touches[0];
 			var touchX = touch.pageX - touch.target.offsetLeft;
 			var touchY = touch.pageY - touch.target.offsetTop;
+			
+			controller.btns.x = buttons[0].isPressed(touchX, touchY);
+			controller.btns.b = buttons[1].isPressed(touchX, touchY);
+			controller.btns.y = buttons[2].isPressed(touchX, touchY);
+			controller.btns.a = buttons[3].isPressed(touchX, touchY);
+			
 		}
 	}
 }
 
 function touchMove(event) {
 	event.preventDefault();
+	if (event.touches) {
+		if (event.touches.length == 1) {
+			var touch = event.touches[0];
+			var touchX = touch.pageX - touch.target.offsetLeft;
+			var touchY = touch.pageY - touch.target.offsetTop;
+			
+			controller.btns.x = buttons[0].isPressed(touchX, touchY);
+			controller.btns.b = buttons[1].isPressed(touchX, touchY);
+			controller.btns.y = buttons[2].isPressed(touchX, touchY);
+			controller.btns.a = buttons[3].isPressed(touchX, touchY);
+			
+		}
+	}
 }
 
 function touchEnd(event) {
 	event.preventDefault();
 }
 
+function mouseDown(event) {
+	var canvas = $("#buttonsCanvas")[0];
+	var x = event.pageX - canvas.offsetLeft;
+	var y = event.pageY - canvas.offsetTop;
+	
+	//console.log(x + " " + y);
 
-canvas.addEventListener('touchstart', touchStart, false);
-canvas.addEventListener('touchmove', touchMove, false);
-canvas.addEventListener('touchend', touchEnd, false);
+	controller.btns.x = buttons[0].isPressed(x, y);
+	controller.btns.b = buttons[1].isPressed(x, y);
+	controller.btns.y = buttons[2].isPressed(x, y);
+	controller.btns.a = buttons[3].isPressed(x, y);
+}
 
+function mouseMove(event) {
+	var canvas = $("#buttonsCanvas")[0];
+	var x = event.pageX - canvas.offsetLeft - 35;
+	var y = event.pageY - canvas.offsetTop - 640;
+	
+	//console.log(x + " " + y);
+
+	controller.btns.x = buttons[0].isPressed(x, y);
+	controller.btns.b = buttons[1].isPressed(x, y);
+	controller.btns.y = buttons[2].isPressed(x, y);
+	controller.btns.a = buttons[3].isPressed(x, y);
+}
+
+function mouseUp(event) {
+	var canvas = $("#buttonsCanvas")[0];
+	var x = event.pageX - canvas.offsetLeft;
+	var y = event.pageY - canvas.offsetTop - 581;
+
+	controller.btns.x = !buttons[0].isPressed(x, y);
+	controller.btns.b = !buttons[1].isPressed(x, y);
+	controller.btns.y = !buttons[2].isPressed(x, y);
+	controller.btns.a = !buttons[3].isPressed(x, y);
+}
+
+
+// canvas.addEventListener('touchstart', touchStart, false);
+// canvas.addEventListener('touchmove', touchMove, false);
+// canvas.addEventListener('touchend', touchEnd, false);
+
+// canvas.addEventListener('mousedown', mouseDown, false);
+// canvas.addEventListener('mousemove', mouseMove, false);
+// canvas.addEventListener('mouseup', mouseUp, false);
+
+var buttons = [];
+// var XButton = touchButton(halfWidth+(halfWidth/2)-25, 0, 50, 50, "blue", "X");
+// var BButton = touchButton(halfWidth+(halfWidth/2)-25, 50, 50, 50, "yellow", "B");
+// var YButton = touchButton(halfWidth+(halfWidth/2)-75, 25, 50, 50, "green", "X");
+// var AButton = touchButton(halfWidth+(halfWidth/2)+25, 25, 50, 50, "red", "B");
+
+var XButton = new touchButton(halfWidth-25, -25+(halfHeight/3), 50, 50, "blue", "X");
+var BButton = new touchButton(halfWidth-25, 75+(halfHeight/3), 50, 50, "yellow", "B");
+var YButton = new touchButton(halfWidth-75, 25+(halfHeight/3), 50, 50, "green", "Y");
+var AButton = new touchButton(halfWidth+25, 25+(halfHeight/3), 50, 50, "red", "A");
+
+buttons.push(XButton);
+buttons.push(BButton);
+buttons.push(YButton);
+buttons.push(AButton);
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+for (var i = 0; i < 4; i++) {
+	buttons[i].draw();
+}
+
+
+
+
+
+
+/**/
 var s = function(sel) {
 	return document.querySelector(sel);
 };
@@ -782,8 +1030,8 @@ function bindJoysticks() {
 		controller.LStick.x = pos.x;
 		controller.LStick.y = pos.y;
 	}).on("end", function(evt, data) {
-		controller.LStick.x = 128;
-		controller.LStick.y = 128;
+		controller.LStick.x = 127;
+		controller.LStick.y = 127;
 	}).on("move", function(evt, data) {
 		var pos = data.instance.frontPosition;
 		pos.x = parseInt(((pos.x + 50) / 100) * 255);
@@ -801,8 +1049,8 @@ function bindJoysticks() {
 		controller.RStick.x = pos.x;
 		controller.RStick.y = pos.y;
 	}).on("end", function(evt, data) {
-		controller.RStick.x = 128;
-		controller.RStick.y = 128;
+		controller.RStick.x = 127;
+		controller.RStick.y = 127;
 	}).on("move", function(evt, data) {
 		var pos = data.instance.frontPosition;
 		pos.x = parseInt(((pos.x + 50) / 100) * 255);
@@ -830,7 +1078,7 @@ function sendTouchInputs() {
 		$("#touchControlsCheckbox").prop("checked", false);
 		swal("You need to connect to twitch!");
 		//setCookie("AttemptedAuth", 1, 60);
-		window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
+		//window.location.href = "https://twitchplaysnintendoswitch.com/8110/auth/twitch/";
 		return;
 	}
 	//controller.reset();
@@ -853,9 +1101,16 @@ $("#touchControlsCheckbox").on("click", function() {
 // 		onLabel: '<span class="glyphicon glyphicon-ok">'
 // 	});
 
-keyboardTimer = setInterval(sendKeyboardInputs, 10);
-gamepadTimer = setInterval(sendGamePadInputs, 10);
-touchTimer = setInterval(sendTouchInputs, 10);
+function sendInputs() {
+	sendKeyboardInputs();
+	sendGamePadInputs();
+	sendTouchInputs();
+}
+
+// keyboardTimer = setInterval(sendKeyboardInputs, 10);
+// gamepadTimer = setInterval(sendGamePadInputs, 10);
+// touchTimer = setInterval(sendTouchInputs, 10);
+setInterval(sendInputs, 10);
 
 
 
@@ -957,16 +1212,16 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 		console.log("the tab with the content id " + contentId + " is visible");
 
 		if (contentId == "#lagless1") {
-			$("#screen").append("<img id='screenshot'></img>")
-
+			//$("#screen").append("<img id='screenshot'></img>")
+			
 			wsavc.disconnect();
 			lagless1Break = false;
 			getLatestImage();
 		} else if (contentId == "#lagless3") {
 
-			setTimeout(function() {
-				$("#screen").empty();
-			}, 500);
+// 			setTimeout(function() {
+// 				$("#screen").empty();
+// 			}, 500);
 
 			lagless1Break = true;
 			var uri = "wss://twitchplaysnintendoswitch.localtunnel.me";
@@ -1053,7 +1308,7 @@ meeting.openSignalingChannel = function(callback) {
 meeting.onaddstream = function(e) {
 };
 // using firebase for signaling
-meeting.firebase = 'rtcweb';
+meeting.firebase = "rtcweb";
 // if someone leaves; just remove his audio
 meeting.onuserleft = function(userid) {
 	var audio = document.getElementById(userid);
@@ -1066,14 +1321,14 @@ meeting.check();
 $("#toggleAudio").on("click", function() {
 	toggleAudio = !toggleAudio;
 	if (toggleAudio) {
-		var icon = $(".glyphicon-volume-off");
-		icon.removeClass("glyphicon-volume-off");
-		icon.addClass("glyphicon-volume-up");
+		var icon = $(".fa-volume-off");
+		icon.removeClass("fa-volume-off");
+		icon.addClass("fa-volume-up");
 		audioElem.play();
 	} else {
-		var icon = $(".glyphicon-volume-up");
-		icon.removeClass("glyphicon-volume-up");
-		icon.addClass("glyphicon-volume-off");
+		var icon = $(".fa-volume-up");
+		icon.removeClass("fa-volume-up");
+		icon.addClass("fa-volume-off");
 		audioElem.pause();
 	}
 });
@@ -1086,7 +1341,12 @@ socket.on("controlQueue", function(data) {
 	
 	for (var i = 0; i < controlQueue.length; i++) {
 		var username = controlQueue[i];
-		var html = "<li class='list-group-item'>" + username + "</li>";
+		var html;
+		if (!toggleDarkTheme) {
+			html = "<li class='list-group-item'>" + username + "</li>";
+		} else {
+			html = "<li class='list-group-item-dark'>" + username + "</li>";
+		} 
 		$("#controlQueue").append(html);
 	}
 });
@@ -1096,21 +1356,37 @@ socket.on("twitchUsername", function(data) {
 });
 
 socket.on("turnTimeLeft", function(data) {
-	var timeLeft = data.timeLeft;
-	var timeLeft2 = parseInt(data.timeLeft / 1000);
-	
-	var percent = parseInt((timeLeft / 30000) * 100);
-	
+	timeLeft = data.timeLeft;
+	turnUsername = data.username;
+	turnLength = data.turnLength;
+	lastCurrentTime = Date.now();
+	var timeLeftMilli = timeLeft;
+	var timeLeftSec = parseInt(timeLeft / 1000);
+	var percent = parseInt((timeLeftMilli / turnLength) * 100);
 	var progressBar = $(".progress-bar");
-// 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(percent + "%");
-// 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(timeLeft2 + " seconds");
-	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(data.username + ": " + timeLeft2 + " seconds");
+	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(data.username + ": " + timeLeftSec + " seconds");
 });
 
+
+setInterval(function() {
+	var currentTime = Date.now();
+	var elapsedTime = currentTime - lastCurrentTime;
+	var timeLeftMilli = timeLeft - elapsedTime;
+	var timeLeftSec = parseInt(timeLeftMilli / 1000);
+	var percent = parseInt((timeLeftMilli / turnLength) * 100);
+	var progressBar = $(".progress-bar");
+	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(turnUsername + ": " + timeLeftSec + " seconds");
+}, 200);
+
+$("#requestTurn").on("click", function(event) {
+	socket.emit("requestTurn");
+});
 
 $("#cancelTurn").on("click", function(event) {
 	socket.emit("cancelTurn");
 });
+
+
 
 
 
@@ -1135,6 +1411,8 @@ $("#toggleTheme").on("click", function() {
 		});
 		
 		$("body").addClass("dark");
+		
+		$("#twitchChat").attr("src", "https://www.twitch.tv/embed/twitchplaysconsoles/chat?darkpopout");
 		
 		
 // ::-webkit-scrollbar { width: 8px; height: 3px;}
@@ -1169,5 +1447,26 @@ $("#toggleTheme").on("click", function() {
 		});
 		
 		$("body").removeClass("dark");
+		
+		$("#twitchChat").attr("src", "https://www.twitch.tv/embed/twitchplaysconsoles/chat");
 	}
 });
+
+
+
+/* HIDE CHAT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+$("#toggleChat").on("click", function() {
+	toggleChat = !toggleChat;
+	if (toggleChat) {
+		$("#twitchChat").attr("style", "display: none;");
+		$("#picture").attr("style", "width: 100%;");
+	} else {
+		$("#twitchChat").attr("style", "display: visible;");
+		$("#picture").attr("style", "width: 75%;");
+	}
+	
+});
+
+
+
+

@@ -125,14 +125,15 @@ app.get("/auth/twitch/callback", passport.authenticate("twitch", {
 // Define a simple template to safely generate HTML with values from user's profile
 var template = handlebars.compile(`
 <html>
-<head><title>Twitch Auth Sample</title></head>
-<table>
+<head><title>Twitch Authentication</title></head>
+<!-- <table>
     <tr><th>Access Token</th><td>{{accessToken}}</td></tr>
     <tr><th>Refresh Token</th><td>{{refreshToken}}</td></tr>
     <tr><th>Display Name</th><td>{{display_name}}</td></tr>
     <tr><th>Bio</th><td>{{bio}}</td></tr>
     <tr><th>Image</th><td>{{logo}}</td></tr>
-</table>
+</table> -->
+Authenticating...
 <script>
 window.location.href = "https://twitchplaysnintendoswitch.com";
 </script>
@@ -143,7 +144,7 @@ app.get("/", function(req, res) {
 	if (req.session && req.session.passport && req.session.passport.user) {
 		console.log(req.session.passport.user);
 		console.log(req.user);
-		var time = 60 * 24 * 60 * 1000; // 1 day
+		var time = 7 * 60 * 24 * 60 * 1000; // 7 days
 		//var time = 15*60*1000;// 15 minutes
 		var username = req.session.passport.user.display_name;
 		var secret = config.HASH_SECRET;
@@ -163,39 +164,39 @@ app.get("/", function(req, res) {
 
 
 app.get("/stats/", function(req, res) {
-	if (req.session && req.session.passport && req.session.passport.user) {
-		console.log(req.session.passport.user);
-		res.cookie('TwitchPlaysNintendoSwitch', req.session.passport.user.display_name, {
-			maxAge: 900000
-		});
-		res.send(template(req.session.passport.user));
-	} else {
-		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
-	}
+// 	if (req.session && req.session.passport && req.session.passport.user) {
+// 		console.log(req.session.passport.user);
+// 		res.cookie('TwitchPlaysNintendoSwitch', req.session.passport.user.display_name, {
+// 			maxAge: 900000
+// 		});
+// 		res.send(template(req.session.passport.user));
+// 	} else {
+// 		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
+// 	}
 });
 
 app.get("/img/", function(req, res) {
 	var imgSrc = "data:image/jpeg;base64," + lastImage;
-	var html = "<html>" + "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>" + "</html";
-	// 	var html = "<html>" + "<video controls id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'></video>" + "</html";
+	var html = "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>";
+	//var html = "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>" + "<script>setTimeout(function(){location.reload()}, 1000/15);</script>";
 	res.send(html);
 });
 
-var currentPlayerSite = '\
-<html>\
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>\
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>\
-<div id="currentPlayer">Current Player: </div>\
-<script>\
-	var socket = io("https://twitchplaysnintendoswitch.com", {\
-		path: "/8110/socket.io",\
-		transports: ["websocket"]\
-	});\
-	socket.on("current player", function(data) {\
-		$("#currentPlayer").text("Current Player: " + data);\
-	});\
-</script>\
-</html>';
+var currentPlayerSite = `
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<div id="currentPlayer">Current Player: </div>
+<script>
+	var socket = io("https://twitchplaysnintendoswitch.com", {
+		path: "/8110/socket.io",
+		transports: ["websocket"],
+	});
+	socket.on("current player", function(data) {
+		$("#currentPlayer").text("Current Player: " + data);
+	});
+</script>
+</html>`;
 
 app.get("/currentplayer/", function(req, res) {
 	res.send(currentPlayerSite);
@@ -203,31 +204,26 @@ app.get("/currentplayer/", function(req, res) {
 
 
 
-var helpSite = '\
-<html>\
-	<style>\
-		.custom {\
-			font-family: comic sans ms;\
-			color: white;\
-			font-size: 50px;\
-		}\
-	</style>\
-	<!--   <marquee scrolldelay="0" scrollamount="10"> -->\
-	<div class="custom">\
-		Type !help for help\
-	</div>\
-	<!--   </marquee> -->\
-	<script>\
-	</script>\
-</html>';
+var helpSite = `
+<html>
+	<style>
+		.custom {
+			font-family: comic sans ms;
+			color: white;
+			font-size: 50px;
+		}
+	</style>
+	<!--   <marquee scrolldelay="0" scrollamount="10"> -->
+	<div class="custom">
+		Type !help for help
+	</div>
+	<!--   </marquee> -->
+	<script>
+	</script>
+</html>`;
 app.get("/help/", function(req, res) {
 	res.send(helpSite);
 });
-
-
-// app.listen(3000, function () {
-//   console.log('Twitch auth sample listening on port 3000!')
-// });
 
 
 server.listen(port, function() {
@@ -235,7 +231,6 @@ server.listen(port, function() {
 });
 
 var lastImage = "";
-
 var usernameDB;
 var localStorage;
 
@@ -251,10 +246,9 @@ if (typeof usernameDB == "undefined" || usernameDB === null) {
 }
 
 console.log(util.inspect(usernameDB, false, null));
-// console.log(typeof usernameDB);
 
 /*
-// for client side
+	// for client side
 	socket = io('http://fosse.co', {
 		path: '/8100/socket.io'
 	});
@@ -675,10 +669,11 @@ io.on("connection", function(socket) {
 		streamSettings.scale = parseInt(data);
 		io.emit("setScale", data);
 	});
-// 	socket.on("setFPS", function(data) {
-// 		streamSettings.fps = parseInt(data);
-// 		io.emit("setFPS", data);
-// 	});
+	
+	socket.on("setFPS", function(data) {
+		streamSettings.fps = parseInt(data);
+		//io.emit("setFPS", data);
+	});
 
 	// 	socket.on("setCoords", function(data) {
 	// 		streamSettings.x1 = data.x1 || streamSettings.x1;

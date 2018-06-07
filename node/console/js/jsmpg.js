@@ -347,10 +347,23 @@ jsmpeg.prototype.play = function(file) {
 	this.targetTime = this.now();
 	this.playing = true;
 	this.scheduleNextFrame();
+	
+	// for streaming:
+	this.client.onmessage = this.receiveSocketMessage.bind(this);
 };
 
 jsmpeg.prototype.pause = function(file) {
 	this.playing = false;
+	// for streaming:
+	this.client.onmessage = function(){};
+};
+
+// for streaming:
+jsmpeg.prototype.play2 = function(file) {
+	this.client.onmessage = this.receiveSocketMessage.bind(this);
+};
+jsmpeg.prototype.pause2 = function(file) {
+	this.client.onmessage = function(){};
 };
 
 jsmpeg.prototype.stop = function(file) {

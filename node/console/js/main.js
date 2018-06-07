@@ -1,7 +1,7 @@
 
 var socket = io("https://twitchplaysnintendoswitch.com", {
 	path: "/8110/socket.io",
-	transports: ['websocket'] // added
+	transports: ['websocket'],
 });
 
 var globalEventTimer = false;
@@ -80,6 +80,9 @@ function getMeta(url, callback) {
 function updateImage() {
 	$("#screen").load("/8110/img/ #screenshot");
 	if (typeof $("#screen")[0].children[0] != "undefined") {
+		// fix for dom freaking out:
+		$("#metaScreen")[0].style.height = "" + $("#screenshot")[0].height;
+		
 		var src = $("#screen")[0].children[0].src;
 		if(src == "data:image/jpeg;base64,") {
 			socket.emit("restart");
@@ -1138,7 +1141,7 @@ setInterval(function() {
 		socket.emit("registerUsername", authCookie);
 		$("#authenticateButton").remove();
 	}
-}, 1000 * 60);
+}, 1000 * 5);
 
 
 
@@ -1182,21 +1185,26 @@ socket.on("setFPS", function(data) {
 /* LAGLESS 2.0 */
 // Setup the WebSocket connection and start the player
 
-// 	var client = new WebSocket( 'wss://' + "twitchplaysnintendoswitch.localtunnel.me" + '/ws' );
-// 	var canvas = document.getElementById('videoCanvas');
-// 	var player = new jsmpeg(client, {canvas:canvas});
+var client = new WebSocket( "wss://twitchplaysnintendoswitch2.localtunnel.me/ws" );
+//var client = new WebSocket( "wss://twitchplaysnintendoswitch.com/3000/ws" );
+var loadingImage = "https://twitchplaysnintendoswitch.com/images/loading.png";
+var canvas2 = document.getElementById("videoCanvas2");
+var player = new jsmpeg(client, {canvas:canvas2, poster: loadingImage});
+player.pause2();
 
 
 /* LAGLESS 3.0 */
-var canvas = document.getElementById("videoCanvas");
+var canvas = document.getElementById("videoCanvas3");
 // Create h264 player
-var uri = "wss://twitchplaysnintendoswitch.localtunnel.me";
+var uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
 var wsavc = new WSAvcPlayer(canvas, "webgl", 1, 35);
 
 
 
 
-// 	wsavc.connect(uri);
+
+
+
 getLatestImage();
 
 
@@ -1213,19 +1221,26 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 
 		if (contentId == "#lagless1") {
 			//$("#screen").append("<img id='screenshot'></img>")
-			
-			wsavc.disconnect();
 			lagless1Break = false;
 			getLatestImage();
-		} else if (contentId == "#lagless3") {
-
-// 			setTimeout(function() {
-// 				$("#screen").empty();
-// 			}, 500);
-
+		} else {
 			lagless1Break = true;
-			var uri = "wss://twitchplaysnintendoswitch.localtunnel.me";
+		}
+		
+		if (contentId == "#lagless2") {
+			player.play2();
+		} else {
+			player.pause2();
+		}
+		
+		if (contentId == "#lagless3") {
+			var uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
 			wsavc.connect(uri);
+		} else {
+			try {
+				wsavc.disconnect();
+			} catch(error) {
+			}
 		}
 
 	} else {}

@@ -155,6 +155,12 @@ body {
 	/* 		margin-left: 20%; */
 }
 
+#screen {
+	width: 100%;
+/* 	overflow:auto;
+	height: 100px; */
+}
+
 #screenshot {
 	width: 100%;
 }
@@ -164,7 +170,10 @@ body {
 	height: 100%;
 }
 
-#videoCanvas {
+#videoCanvas2 {
+	width: 100%;
+}
+#videoCanvas3 {
 	width: 100%;
 }
 

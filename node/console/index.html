@@ -9,7 +9,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 
-	
+	<script src="js/require.js"></script>
 	<script src="js/keymaster.js"></script>
 	<script src="js/gamepad.js"></script>
 	<script src="js/localforage.min.js"></script>
@@ -60,20 +60,20 @@
 
 				<ul class="nav nav-tabs" role="tablist">
 					<li class="nav-item active">
-						<a class="nav-link active" data-toggle="tab" href="#lagless1">Lagless 1</a>
+						<a id="tab1" class="nav-link active" data-toggle="tab" href="#lagless1">Lagless 1</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#lagless2">Lagless 2</a>
+						<a id="tab2" class="nav-link" data-toggle="tab" href="#lagless2">Lagless 2</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#lagless3">Lagless 3</a>
+						<a id="tab3" class="nav-link" data-toggle="tab" href="#lagless3">Lagless 3</a>
+					</li>
+<!-- 					<li class="nav-item">
+						<a id="tab4" class="nav-link" data-toggle="tab" href="#lagless4">Lagless 4</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#lagless4">Lagless 4</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" data-toggle="tab" href="#lagless5">Lagless 5</a>
-					</li>
+						<a id="tab5" class="nav-link" data-toggle="tab" href="#lagless5">Lagless 5</a>
+					</li> -->
 				</ul>
 
 				<div class="tab-content">
@@ -90,9 +90,12 @@
 					<div id="lagless3" class="tab-pane">
 						<canvas id="videoCanvas3"></canvas>
 					</div>
-					<div id="lagless4" class="tab-pane">
+<!-- 					<div id="lagless4" class="tab-pane">
 						<canvas id="videoCanvas4"></canvas>
 					</div>
+					<div id="lagless5" class="tab-pane">
+						<canvas id="videoCanvas5"></canvas>
+					</div> -->
 				</div>
 
 				<!-- <image id="screenshot"></image> -->
@@ -150,6 +153,11 @@
 										</label>
 									</li>
 								</ul>
+								
+								<div class="well">
+									<canvas id="controllerViewCanvas"></canvas>
+								</div>
+								
 							</div>
 
 							<div class="six">
@@ -201,8 +209,8 @@
 									<input id="fpsSlider" class="slider" type="range" min="1" step="1" max="15" value="15">
 								</div>
 								<div class="sliderContainer">
-									Threshold: <span id="threshold">30</span>
-									<input id="thresholdSlider" class="slider" type="range" min="1" step="1" max="128" value="30">
+									Threshold: <span id="threshold">50</span>
+									<input id="thresholdSlider" class="slider" type="range" min="1" step="1" max="128" value="50">
 								</div>
 							</div>
 						</div>
@@ -368,7 +376,7 @@
 								<div class="buttonConfig" title="forward" id="forward"></div><br>
 							</div>
 
-							<input id="ex1" data-slider-id='ex1Slider' type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50" />
+							<input id="ex1" data-slider-id="ex1Slider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="50" />
 
 							sound stuff
 						</div>

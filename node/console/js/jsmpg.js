@@ -605,6 +605,10 @@ jsmpeg.prototype.forwardF = 0;
 
 
 jsmpeg.prototype.decodePicture = function(skipOutput) {
+	if (typeof this.stats != "undefined") {
+		this.stats.begin();
+	}
+	
 	var pictureStart = this.buffer.index - 32;
 	this.currentFrame++;
 	this.currentTime = this.currentFrame / this.pictureRate;
@@ -680,6 +684,10 @@ jsmpeg.prototype.decodePicture = function(skipOutput) {
 		this.currentCr32 = tmpCr32;
 		this.currentCb = tmpCb;
 		this.currentCb32 = tmpCb32;
+	}
+	
+	if (typeof this.stats != "undefined") {
+		this.stats.end();
 	}
 };
 

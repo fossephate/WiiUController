@@ -1,25 +1,35 @@
 
-var socket = io("https://twitchplaysnintendoswitch.com", {
+let socket = io("https://twitchplaysnintendoswitch.com", {
 	path: "/8110/socket.io",
-	transports: ['websocket'],
+	transports: ["websocket"],
 });
 
-var globalEventTimer = false;
-var keyboardTimer;
-var gamepadTimer;
-var touchTimer;
-var lagless1Break = false;
-var audio = true;
-var controlQueue = [];
-var twitchUsername = null;
-var toggleDarkTheme = false;
-var toggleChat = false;
-var timeLeft = 30000;
-var turnLength = 30000;
-var turnUsername = null;
-var lastCurrentTime = 0;
+let globalEventTimer = false;
+let keyboardTimer;
+let gamepadTimer;
+let touchTimer;
+let lagless1Break = false;
+let audio = true;
+let controlQueue = [];
+let twitchUsername = null;
+let toggleDarkTheme = false;
+let toggleChat = false;
+let timeLeft = 30000;
+let turnLength = 30000;
+let turnUsername = null;
+let lastCurrentTime = 0;
+let stats = new Stats();
+stats.showPanel(0);// 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild(stats.dom);
 
-var keyboardLayout = {};
+
+let now;
+let elapsed;
+let fpsInterval = 1000 / 15;
+let then = Date.now();
+let startTime = then;
+
+let keyboardLayout = {};
 keyboardLayout.LYU = "W";
 keyboardLayout.LYD = "S";
 keyboardLayout.LXL = "A";
@@ -48,7 +58,7 @@ keyboardLayout.Capture = "1";
 keyboardLayout.Home = "2";
 
 function getMeta(url, callback) {
-	var img = new Image();
+	let img = new Image();
 	img.src = url;
 	img.onload = function() {
 		callback(this.width, this.height);
@@ -60,7 +70,7 @@ function getMeta(url, callback) {
 // // 	document.getElementById("screen2").contentDocument.location.reload(true);
 
 // 	if (typeof $("#screen")[0].children[0] != "undefined") {
-// 		var src = $("#screen")[0].children[0].src;
+// 		let src = $("#screen")[0].children[0].src;
 // 		if(src == "data:image/jpeg;base64,") {
 // 			socket.emit("restart");
 // 		}
@@ -70,8 +80,8 @@ function getMeta(url, callback) {
 // 		return;
 // 	}
 
-// // 	var fps = parseInt($("#fpsSlider").val());
-// // 	var timeToSleep = 1000 / fps;
+// // 	let fps = parseInt($("#fpsSlider").val());
+// // 	let timeToSleep = 1000 / fps;
 // // 	setTimeout(getLatestImage, timeToSleep);
 // 	requestAnimationFrame(getLatestImage);
 // }
@@ -83,23 +93,12 @@ function updateImage() {
 		// fix for dom freaking out:
 		$("#metaScreen")[0].style.height = "" + $("#screenshot")[0].height;
 		
-		var src = $("#screen")[0].children[0].src;
+		let src = $("#screen")[0].children[0].src;
 		if(src == "data:image/jpeg;base64,") {
 			socket.emit("restart");
 		}
 	}
 }
-
-var stats = new Stats();
-stats.showPanel(0);// 0: fps, 1: ms, 2: mb, 3+: custom
-document.body.appendChild(stats.dom);
-
-
-var now;
-var elapsed;
-var fpsInterval = 1000 / 15;
-var then = Date.now();
-var startTime = then;
 
 function getLatestImage() {
 	
@@ -114,7 +113,7 @@ function getLatestImage() {
 	
     if (elapsed > fpsInterval) {	
 		
-		var fps = parseInt($("#fpsSlider").val());
+		let fps = parseInt($("#fpsSlider").val());
 		fpsInterval = 1000 / fps;
 		
         then = now - (elapsed % fpsInterval);
@@ -130,11 +129,11 @@ function getLatestImage() {
 
 // 		stats.begin();
 	
-// 		var src = "data:image/jpeg;base64," + data.src;
+// 		let src = "data:image/jpeg;base64," + data.src;
 // 	// 	if(src == "data:image/jpeg;base64,") {
 // 	// 		socket.emit("restart");
 // 	// 	}
-// 		var image = new Image();
+// 		let image = new Image();
 // 		image.src = src;
 // 		image.style = "max-width:100%; height:auto;";
 // 		//image.style = "width:120%; height:auto;";
@@ -150,14 +149,14 @@ function getLatestImage() {
 /*    CHAT */
 $("#chatForm").on("submit", function() {
 	event.preventDefault();
-	var msg = $("#msgInput").val();
+	let msg = $("#msgInput").val();
 	socket.emit("chat message", msg);
 	$("#msgInput").val("");
 	return false;
 });
 
 socket.on("chat message", function(msg) {
-	var newMessage = $('<li>').text(msg);
+	let newMessage = $("<li>").text(msg);
 	$("#messageList").append(newMessage);
 	newMessage[0].scrollIntoView(false);
 });
@@ -169,7 +168,7 @@ socket.on("current player", function(data) {
 
 /* CONTROLLER STUFF */
 
-var gamepadCounter = 0;
+let gamepadCounter = 0;
 
 controller = {};
 controller.btns = {};
@@ -212,7 +211,7 @@ controller.reset = function() {
 	controller.RStick.y = 127;
 }
 
-var oldControllerState = "";
+let oldControllerState = "";
 
 function sendControllerState() {
 	let newControllerState = "";
@@ -254,10 +253,10 @@ function sendControllerState() {
 	newControllerState += controller.btns.home == 1 ? "1" : "0";
 
 
-	var LX = controller.LStick.x;
-	var LY = controller.LStick.y;
-	var RX = controller.RStick.x;
-	var RY = controller.RStick.y;
+	let LX = controller.LStick.x;
+	let LY = controller.LStick.y;
+	let RX = controller.RStick.x;
+	let RY = controller.RStick.y;
 
 	newControllerState += " " + LX + " " + LY + " " + RX + " " + RY;
 
@@ -273,8 +272,8 @@ function sendControllerState() {
 	}
 	
 	if(controlQueue[0] != twitchUsername && controlQueue.length > 0) {
-		swal("It's not your turn yet!");
-		//$("#turnTimerBar").effect("shake", {direction: "left", distance: 10});
+		//swal("It's not your turn yet!");
+		$("#turnTimerBar").effect("shake", {direction: "left", distance: 100, times: 3}, 500);
 		return;
 	}
 	
@@ -286,14 +285,14 @@ function sendControllerState() {
 
 
 
-var wasPressedKeyCodes = [];
+let wasPressedKeyCodes = [];
 
 function sendKeyboardInputs() {
 
 	if (!document.getElementById("keyboardControllerCheckbox").checked) {
 		return;
 	}
-	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
+	let authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
 		$("#keyboardControllerCheckbox").prop("checked", false);
 		swal("You need to connect to twitch!");
@@ -464,128 +463,128 @@ window.addEventListener("keydown", function(e) {
 
 const gamepad = new Gamepad();
 
-gamepad.on('connect', e => {
+gamepad.on("connect", e => {
 	console.log(`controller ${e.index} connected!`);
 	gamepadCounter += 1;
 	//window.clearInterval(keyboardTimer);
 });
 
-gamepad.on('disconnect', e => {
+gamepad.on("disconnect", e => {
 	console.log(`controller ${e.index} disconnected!`);
 	gamepadCounter -= 1;
 	//keyboardTimer = setInterval(sendKeyboardInputs, 10);
 });
 
-gamepad.on('press', 'button_1', e => {
+gamepad.on("press", "button_1", e => {
 	controller.btns.b = 1;
 });
-gamepad.on('release', 'button_1', e => {
+gamepad.on("release", "button_1", e => {
 	controller.btns.b = 0;
 });
 
-gamepad.on('press', 'button_2', e => {
+gamepad.on("press", "button_2", e => {
 	controller.btns.a = 1;
 });
-gamepad.on('release', 'button_2', e => {
+gamepad.on("release", "button_2", e => {
 	controller.btns.a = 0;
 });
 
-gamepad.on('press', 'button_3', e => {
+gamepad.on("press", "button_3", e => {
 	controller.btns.y = 1;
 });
-gamepad.on('release', 'button_3', e => {
+gamepad.on("release", "button_3", e => {
 	controller.btns.y = 0;
 });
 
-gamepad.on('press', 'button_4', e => {
+gamepad.on("press", "button_4", e => {
 	controller.btns.x = 1;
 });
-gamepad.on('release', 'button_4', e => {
+gamepad.on("release", "button_4", e => {
 	controller.btns.x = 0;
 });
 
 
-gamepad.on('press', 'shoulder_top_left', e => {
+gamepad.on("press", "shoulder_top_left", e => {
 	controller.btns.l = 1;
 });
-gamepad.on('release', 'shoulder_top_left', e => {
+gamepad.on("release", "shoulder_top_left", e => {
 	controller.btns.l = 0;
 });
 
-gamepad.on('press', 'shoulder_top_right', e => {
+gamepad.on("press", "shoulder_top_right", e => {
 	controller.btns.r = 1;
 });
-gamepad.on('release', 'shoulder_top_right', e => {
+gamepad.on("release", "shoulder_top_right", e => {
 	controller.btns.r = 0;
 });
 
-gamepad.on('press', 'shoulder_bottom_left', e => {
+gamepad.on("press", "shoulder_bottom_left", e => {
 	controller.btns.zl = 1;
 });
-gamepad.on('release', 'shoulder_bottom_left', e => {
+gamepad.on("release", "shoulder_bottom_left", e => {
 	controller.btns.zl = 0;
 });
 
-gamepad.on('press', 'shoulder_bottom_right', e => {
+gamepad.on("press", "shoulder_bottom_right", e => {
 	controller.btns.zr = 1;
 });
-gamepad.on('release', 'shoulder_bottom_right', e => {
+gamepad.on("release", "shoulder_bottom_right", e => {
 	controller.btns.zr = 0;
 });
 
-gamepad.on('press', 'select', e => {
+gamepad.on("press", "select", e => {
 	controller.btns.minus = 1;
 });
-gamepad.on('release', 'select', e => {
+gamepad.on("release", "select", e => {
 	controller.btns.minus = 0;
 });
-gamepad.on('press', 'start', e => {
+gamepad.on("press", "start", e => {
 	controller.btns.plus = 1;
 });
-gamepad.on('release', 'start', e => {
+gamepad.on("release", "start", e => {
 	controller.btns.plus = 0;
 });
 
 
 
-gamepad.on('press', 'd_pad_up', e => {
+gamepad.on("press", "d_pad_up", e => {
 	controller.btns.up = 1;
 });
-gamepad.on('release', 'd_pad_up', e => {
+gamepad.on("release", "d_pad_up", e => {
 	controller.btns.up = 0;
 });
 
-gamepad.on('press', 'd_pad_down', e => {
+gamepad.on("press", "d_pad_down", e => {
 	controller.btns.down = 1;
 });
-gamepad.on('release', 'd_pad_down', e => {
+gamepad.on("release", "d_pad_down", e => {
 	controller.btns.down = 0;
 });
 
-gamepad.on('press', 'd_pad_left', e => {
+gamepad.on("press", "d_pad_left", e => {
 	controller.btns.left = 1;
 });
-gamepad.on('release', 'd_pad_left', e => {
+gamepad.on("release", "d_pad_left", e => {
 	controller.btns.left = 0;
 });
 
-gamepad.on('press', 'd_pad_right', e => {
+gamepad.on("press", "d_pad_right", e => {
 	controller.btns.right = 1;
 });
-gamepad.on('release', 'd_pad_right', e => {
+gamepad.on("release", "d_pad_right", e => {
 	controller.btns.right = 0;
 });
 
-gamepad.on('hold', 'stick_axis_left', e => {
-	var x = e.value[0];
-	var y = e.value[1];
+gamepad.on("hold", "stick_axis_left", e => {
+	let x = e.value[0];
+	let y = e.value[1];
 	x = (x / 2) + 0.5;
 	y = (-y / 2) + 0.5;
 	x *= 255;
 	y *= 255;
 	controller.LStick.x = parseInt(x);
 	controller.LStick.y = parseInt(y);
-	var thresh = parseInt($("#threshold").text());
+	let thresh = parseInt($("#threshold").text());
 	if (Math.abs(127 - controller.LStick.x) < thresh) {
 		controller.LStick.x = 127;
 	}
@@ -593,16 +592,16 @@ gamepad.on('hold', 'stick_axis_left', e => {
 		controller.LStick.y = 127;
 	}
 });
-gamepad.on('press', 'stick_axis_left', e => {
-	var x = e.value[0];
-	var y = e.value[1];
+gamepad.on("press", "stick_axis_left", e => {
+	let x = e.value[0];
+	let y = e.value[1];
 	x = (x / 2) + 0.5;
 	y = (-y / 2) + 0.5;
 	x *= 255;
 	y *= 255;
 	controller.LStick.x = parseInt(x);
 	controller.LStick.y = parseInt(y);
-	var thresh = parseInt($("#threshold").text());
+	let thresh = parseInt($("#threshold").text());
 	if (Math.abs(127 - controller.LStick.x) < thresh) {
 		controller.LStick.x = 127;
 	}
@@ -610,16 +609,16 @@ gamepad.on('press', 'stick_axis_left', e => {
 		controller.LStick.y = 127;
 	}
 });
-gamepad.on('release', 'stick_axis_left', e => {
-	var x = e.value[0];
-	var y = e.value[1];
+gamepad.on("release", "stick_axis_left", e => {
+	let x = e.value[0];
+	let y = e.value[1];
 	x = (x / 2) + 0.5;
 	y = (-y / 2) + 0.5;
 	x *= 255;
 	y *= 255;
 	controller.LStick.x = parseInt(x);
 	controller.LStick.y = parseInt(y);
-	var thresh = parseInt($("#threshold").text());
+	let thresh = parseInt($("#threshold").text());
 	if (Math.abs(127 - controller.LStick.x) < thresh) {
 		controller.LStick.x = 127;
 	}
@@ -627,16 +626,16 @@ gamepad.on('release', 'stick_axis_left', e => {
 		controller.LStick.y = 127;
 	}
 });
-gamepad.on('hold', 'stick_axis_right', e => {
-	var x = e.value[0];
-	var y = e.value[1];
+gamepad.on("hold", "stick_axis_right", e => {
+	let x = e.value[0];
+	let y = e.value[1];
 	x = (x / 2) + 0.5;
 	y = (-y / 2) + 0.5;
 	x *= 255;
 	y *= 255;
 	controller.RStick.x = parseInt(x);
 	controller.RStick.y = parseInt(y);
-	var thresh = parseInt($("#threshold").text());
+	let thresh = parseInt($("#threshold").text());
 	if (Math.abs(127 - controller.RStick.x) < thresh) {
 		controller.RStick.x = 127;
 	}
@@ -644,16 +643,16 @@ gamepad.on('hold', 'stick_axis_right', e => {
 		controller.RStick.y = 127;
 	}
 });
-gamepad.on('press', 'stick_axis_right', e => {
-	var x = e.value[0];
-	var y = e.value[1];
+gamepad.on("press", "stick_axis_right", e => {
+	let x = e.value[0];
+	let y = e.value[1];
 	x = (x / 2) + 0.5;
 	y = (-y / 2) + 0.5;
 	x *= 255;
 	y *= 255;
 	controller.RStick.x = parseInt(x);
 	controller.RStick.y = parseInt(y);
-	var thresh = parseInt($("#threshold").text());
+	let thresh = parseInt($("#threshold").text());
 	if (Math.abs(127 - controller.RStick.x) < thresh) {
 		controller.RStick.x = 127;
 	}
@@ -661,16 +660,16 @@ gamepad.on('press', 'stick_axis_right', e => {
 		controller.RStick.y = 127;
 	}
 });
-gamepad.on('release', 'stick_axis_right', e => {
-	var x = e.value[0];
-	var y = e.value[1];
+gamepad.on("release", "stick_axis_right", e => {
+	let x = e.value[0];
+	let y = e.value[1];
 	x = (x / 2) + 0.5;
 	y = (-y / 2) + 0.5;
 	x *= 255;
 	y *= 255;
 	controller.RStick.x = parseInt(x);
 	controller.RStick.y = parseInt(y);
-	var thresh = parseInt($("#threshold").text());
+	let thresh = parseInt($("#threshold").text());
 	if (Math.abs(127 - controller.RStick.x) < thresh) {
 		controller.RStick.x = 127;
 	}
@@ -679,16 +678,16 @@ gamepad.on('release', 'stick_axis_right', e => {
 	}
 });
 
-gamepad.on('press', 'stick_button_left', e => {
+gamepad.on("press", "stick_button_left", e => {
 	controller.btns.stick_button = 1;
 });
-gamepad.on('release', 'stick_button_left', e => {
+gamepad.on("release", "stick_button_left", e => {
 	controller.btns.stick_button = 0;
 });
-gamepad.on('press', 'stick_button_right', e => {
+gamepad.on("press", "stick_button_right", e => {
 	controller.btns.stick_button2 = 1;
 });
-gamepad.on('release', 'stick_button_right', e => {
+gamepad.on("release", "stick_button_right", e => {
 	controller.btns.stick_button2 = 0;
 });
 
@@ -698,7 +697,7 @@ function sendGamePadInputs() {
 	if (!document.getElementById("keyboardControllerCheckbox").checked) {
 		return;
 	}
-	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
+	let authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
 		$("#keyboardControllerCheckbox").prop("checked", false);
 		swal("You need to connect to twitch!");
@@ -714,10 +713,10 @@ function sendGamePadInputs() {
 
 
 /* more gamepad support */
-// var gamepads = {};
+// let gamepads = {};
 
 // function gamepadHandler(event, connecting) {
-// 	var gamepad = event.gamepad;
+// 	let gamepad = event.gamepad;
 // 	// Note:
 // 	// gamepad === navigator.getGamepads()[gamepad.index]
 
@@ -730,9 +729,9 @@ function sendGamePadInputs() {
 
 
 // function pollGamepads() {
-// 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
-// 	for (var i = 0; i < gamepads.length; i++) {
-// 		var gp = gamepads[i];
+// 	let gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+// 	for (let i = 0; i < gamepads.length; i++) {
+// 		let gp = gamepads[i];
 // 		if (gp) {
 // 			//console.log(gp.axes[4] + " " + gp.axes[9]);
 // 			console.log(gp);
@@ -759,63 +758,63 @@ function sendGamePadInputs() {
 
 
 // Get stored preferences
-// 	localforage.getItem('keyboardLayout').then(function(value) {
+// 	localforage.getItem("keyboardLayout").then(function(value) {
 // 		// If they exist, write them
 // 		if (value) {
 // 			keyboardLayout = value;
 // 		}
 // 		// Store the preferences (so that the default values get stored)
-// 		localforage.setItem('keyboardLayout', keyboardLayout);
+// 		localforage.setItem("keyboardLayout", keyboardLayout);
 
 
 // 		// Update the keyboard layout settings window to reflect the stored settings, not the default ones
-// 		for (var i = 0; i < $(".buttonConfig").length; i++) {
-// 			var div = $(".buttonConfig")[i];
-// 			var assignedKey = keyboardLayout[div.id];
+// 		for (let i = 0; i < $(".buttonConfig").length; i++) {
+// 			let div = $(".buttonConfig")[i];
+// 			let assignedKey = keyboardLayout[div.id];
 // 			$("#" + div.id).html(String.fromCharCode(assignedKey).toLowerCase());
 // 		}
 // 	});
 
 //change document to #keyboardLayoutConfig using <tabindex="0">
-$(".buttonConfig").on('click', function(e) {
+$(".buttonConfig").on("click", function(e) {
 	$(document).off("keydown");
 	//window.addEventListener("keydown", handleKey, false);
 	$(document).on("keydown", function(e2) {
 		console.log(e2.key);
-		var keys = [];
-		for (var i in keyboardLayout) {
+		let keys = [];
+		for (let i in keyboardLayout) {
 			keys.push(keyboardLayout[i]);
 		}
-		//var values = Object.values(preferences.keyboard.layout);
+		//let values = Object.values(preferences.keyboard.layout);
 		if (keys.indexOf(e2.key) == -1) {
 			$("#" + e.target.id).html(String.fromCharCode(e2.which));
 			keyboardLayout[e.target.id] = e2.key;
-			localforage.setItem('keyboardLayout', keyboardLayout);
+			localforage.setItem("keyboardLayout", keyboardLayout);
 
 			$(document).off("keydown");
 			//window.addEventListener("keydown", handleKey, false);
 		} else {
 			$("#" + e.target.id).animate({
 				backgroundColor: "#AC3333"
-			}, 'fast');
+			}, "fast");
 			setTimeout(function() {
 				$("#" + e.target.id).animate({
 					backgroundColor: "#888"
-				}, 'slow');
+				}, "slow");
 			}, 100);
 		}
 	});
 });
-$("#keyboardLayoutConfig").on('click', function(e) {
+$("#keyboardLayoutConfig").on("click", function(e) {
 	//console.log(e.target);
-	var isButton = e.target.classList[0] == "buttonConfig";
+	let isButton = e.target.classList[0] == "buttonConfig";
 	if (!isButton) {
 		$(document).off("keydown");
 		// 			window.addEventListener("keydown", handleKey, false);
 	}
 });
 
-// $('#keyboardController').checkboxpicker({
+// $("#keyboardController").checkboxpicker({
 // 	html: true,
 // 	offLabel: '<span class="glyphicon glyphicon-remove">',
 // 	onLabel: '<span class="glyphicon glyphicon-ok">'
@@ -832,16 +831,16 @@ $("#keyboardLayoutConfig").on('click', function(e) {
 
 
 
-var canvas = $("#buttonsCanvas")[0];
-var ctx = canvas.getContext("2d");
+let canvas = $("#buttonsCanvas")[0];
+let ctx = canvas.getContext("2d");
 canvas.style.width="100%";
 canvas.style.height="100%";
 canvas.width  = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
-var realWidth = $("#buttonsCanvas")[0].width;
-var realHeight = $("#buttonsCanvas")[0].height;
-var halfWidth = $("#buttonsCanvas")[0].width/2;
-var halfHeight = $("#buttonsCanvas")[0].height/2;
+let realWidth = $("#buttonsCanvas")[0].width;
+let realHeight = $("#buttonsCanvas")[0].height;
+let halfWidth = $("#buttonsCanvas")[0].width/2;
+let halfHeight = $("#buttonsCanvas")[0].height/2;
 // ctx.fillStyle = "#FF0000";
 // ctx.fillRect(halfWidth+(halfWidth/2)-25,0,50,50);
 
@@ -885,9 +884,9 @@ function touchStart(event) {
 	event.preventDefault();
 	if (event.touches) {
 		if (event.touches.length == 1) {
-			var touch = event.touches[0];
-			var touchX = touch.pageX - touch.target.offsetLeft;
-			var touchY = touch.pageY - touch.target.offsetTop;
+			let touch = event.touches[0];
+			let touchX = touch.pageX - touch.target.offsetLeft;
+			let touchY = touch.pageY - touch.target.offsetTop;
 			
 			controller.btns.x = buttons[0].isPressed(touchX, touchY);
 			controller.btns.b = buttons[1].isPressed(touchX, touchY);
@@ -902,9 +901,9 @@ function touchMove(event) {
 	event.preventDefault();
 	if (event.touches) {
 		if (event.touches.length == 1) {
-			var touch = event.touches[0];
-			var touchX = touch.pageX - touch.target.offsetLeft;
-			var touchY = touch.pageY - touch.target.offsetTop;
+			let touch = event.touches[0];
+			let touchX = touch.pageX - touch.target.offsetLeft;
+			let touchY = touch.pageY - touch.target.offsetTop;
 			
 			controller.btns.x = buttons[0].isPressed(touchX, touchY);
 			controller.btns.b = buttons[1].isPressed(touchX, touchY);
@@ -920,9 +919,9 @@ function touchEnd(event) {
 }
 
 function mouseDown(event) {
-	var canvas = $("#buttonsCanvas")[0];
-	var x = event.pageX - canvas.offsetLeft;
-	var y = event.pageY - canvas.offsetTop;
+	let canvas = $("#buttonsCanvas")[0];
+	let x = event.pageX - canvas.offsetLeft;
+	let y = event.pageY - canvas.offsetTop;
 	
 	//console.log(x + " " + y);
 
@@ -933,9 +932,9 @@ function mouseDown(event) {
 }
 
 function mouseMove(event) {
-	var canvas = $("#buttonsCanvas")[0];
-	var x = event.pageX - canvas.offsetLeft - 35;
-	var y = event.pageY - canvas.offsetTop - 640;
+	let canvas = $("#buttonsCanvas")[0];
+	let x = event.pageX - canvas.offsetLeft - 35;
+	let y = event.pageY - canvas.offsetTop - 640;
 	
 	//console.log(x + " " + y);
 
@@ -946,9 +945,9 @@ function mouseMove(event) {
 }
 
 function mouseUp(event) {
-	var canvas = $("#buttonsCanvas")[0];
-	var x = event.pageX - canvas.offsetLeft;
-	var y = event.pageY - canvas.offsetTop - 581;
+	let canvas = $("#buttonsCanvas")[0];
+	let x = event.pageX - canvas.offsetLeft;
+	let y = event.pageY - canvas.offsetTop - 581;
 
 	controller.btns.x = !buttons[0].isPressed(x, y);
 	controller.btns.b = !buttons[1].isPressed(x, y);
@@ -957,24 +956,24 @@ function mouseUp(event) {
 }
 
 
-// canvas.addEventListener('touchstart', touchStart, false);
-// canvas.addEventListener('touchmove', touchMove, false);
-// canvas.addEventListener('touchend', touchEnd, false);
+// canvas.addEventListener("touchstart", touchStart, false);
+// canvas.addEventListener("touchmove", touchMove, false);
+// canvas.addEventListener("touchend", touchEnd, false);
 
-// canvas.addEventListener('mousedown', mouseDown, false);
-// canvas.addEventListener('mousemove', mouseMove, false);
-// canvas.addEventListener('mouseup', mouseUp, false);
+// canvas.addEventListener("mousedown", mouseDown, false);
+// canvas.addEventListener("mousemove", mouseMove, false);
+// canvas.addEventListener("mouseup", mouseUp, false);
 
-var buttons = [];
-// var XButton = touchButton(halfWidth+(halfWidth/2)-25, 0, 50, 50, "blue", "X");
-// var BButton = touchButton(halfWidth+(halfWidth/2)-25, 50, 50, 50, "yellow", "B");
-// var YButton = touchButton(halfWidth+(halfWidth/2)-75, 25, 50, 50, "green", "X");
-// var AButton = touchButton(halfWidth+(halfWidth/2)+25, 25, 50, 50, "red", "B");
+let buttons = [];
+// let XButton = touchButton(halfWidth+(halfWidth/2)-25, 0, 50, 50, "blue", "X");
+// let BButton = touchButton(halfWidth+(halfWidth/2)-25, 50, 50, 50, "yellow", "B");
+// let YButton = touchButton(halfWidth+(halfWidth/2)-75, 25, 50, 50, "green", "X");
+// let AButton = touchButton(halfWidth+(halfWidth/2)+25, 25, 50, 50, "red", "B");
 
-var XButton = new touchButton(halfWidth-25, -25+(halfHeight/3), 50, 50, "blue", "X");
-var BButton = new touchButton(halfWidth-25, 75+(halfHeight/3), 50, 50, "yellow", "B");
-var YButton = new touchButton(halfWidth-75, 25+(halfHeight/3), 50, 50, "green", "Y");
-var AButton = new touchButton(halfWidth+25, 25+(halfHeight/3), 50, 50, "red", "A");
+let XButton = new touchButton(halfWidth-25, -25+(halfHeight/3), 50, 50, "blue", "X");
+let BButton = new touchButton(halfWidth-25, 75+(halfHeight/3), 50, 50, "yellow", "B");
+let YButton = new touchButton(halfWidth-75, 25+(halfHeight/3), 50, 50, "green", "Y");
+let AButton = new touchButton(halfWidth+25, 25+(halfHeight/3), 50, 50, "red", "A");
 
 buttons.push(XButton);
 buttons.push(BButton);
@@ -982,7 +981,7 @@ buttons.push(YButton);
 buttons.push(AButton);
 
 ctx.clearRect(0, 0, canvas.width, canvas.height);
-for (var i = 0; i < 4; i++) {
+for (let i = 0; i < 4; i++) {
 	buttons[i].draw();
 }
 
@@ -992,41 +991,41 @@ for (var i = 0; i < 4; i++) {
 
 
 /**/
-var s = function(sel) {
+let s = function(sel) {
 	return document.querySelector(sel);
 };
-var sId = function(sel) {
+let sId = function(sel) {
 	return document.getElementById(sel);
 };
-var removeClass = function(el, clss) {
-	el.className = el.className.replace(new RegExp('\\b' + clss + ' ?\\b', 'g'), '');
+let removeClass = function(el, clss) {
+	el.className = el.className.replace(new RegExp("\\b" + clss + " ?\\b", "g"), "");
 }
-var joysticks = {
+let joysticks = {
 	leftStick: {
-		zone: document.querySelector('#leftStick'),
-		mode: 'semi',
+		zone: document.querySelector("#leftStick"),
+		mode: "semi",
 		catchDistance: 150,
-		color: 'red',
+		color: "red",
 		multitouch: true,
 	},
 	rightStick: {
-		zone: document.querySelector('#rightStick'),
-		mode: 'semi',
+		zone: document.querySelector("#rightStick"),
+		mode: "semi",
 		catchDistance: 150,
-		color: 'blue',
+		color: "blue",
 		multitouch: true,
 	},
 
 };
 
-var leftStick;
-var rightStick;
+let leftStick;
+let rightStick;
 
-createJoysticks('static');
+createJoysticks("static");
 
 function bindJoysticks() {
 	leftStick.on("start", function(evt, data) {
-		var pos = data.frontPosition;
+		let pos = data.frontPosition;
 		pos.x = parseInt(((pos.x + 50) / 100) * 255);
 		pos.y = parseInt(((pos.y + 50) / 100) * 255);
 		pos.y = 255 - pos.y;
@@ -1036,7 +1035,7 @@ function bindJoysticks() {
 		controller.LStick.x = 127;
 		controller.LStick.y = 127;
 	}).on("move", function(evt, data) {
-		var pos = data.instance.frontPosition;
+		let pos = data.instance.frontPosition;
 		pos.x = parseInt(((pos.x + 50) / 100) * 255);
 		pos.y = parseInt(((pos.y + 50) / 100) * 255);
 		pos.y = 255 - pos.y;
@@ -1045,7 +1044,7 @@ function bindJoysticks() {
 	})
 
 	rightStick.on("start", function(evt, data) {
-		var pos = data.frontPosition;
+		let pos = data.frontPosition;
 		pos.x = parseInt(((pos.x + 50) / 100) * 255);
 		pos.y = parseInt(((pos.y + 50) / 100) * 255);
 		pos.y = 255 - pos.y;
@@ -1055,7 +1054,7 @@ function bindJoysticks() {
 		controller.RStick.x = 127;
 		controller.RStick.y = 127;
 	}).on("move", function(evt, data) {
-		var pos = data.instance.frontPosition;
+		let pos = data.instance.frontPosition;
 		pos.x = parseInt(((pos.x + 50) / 100) * 255);
 		pos.y = parseInt(((pos.y + 50) / 100) * 255);
 		pos.y = 255 - pos.y;
@@ -1076,7 +1075,7 @@ function sendTouchInputs() {
 	if (!document.getElementById("touchControlsCheckbox").checked) {
 		return;
 	}
-	var authCookie = getCookie("TwitchPlaysNintendoSwitch");
+	let authCookie = getCookie("TwitchPlaysNintendoSwitch");
 	if (authCookie == null) {
 		$("#touchControlsCheckbox").prop("checked", false);
 		swal("You need to connect to twitch!");
@@ -1098,7 +1097,7 @@ $("#touchControlsCheckbox").on("click", function() {
 	}
 });
 
-// 	$('#touchControlsCheckbox').checkboxpicker({
+// 	$("#touchControlsCheckbox").checkboxpicker({
 // 		html: true,
 // 		offLabel: '<span class="glyphicon glyphicon-remove">',
 // 		onLabel: '<span class="glyphicon glyphicon-ok">'
@@ -1125,8 +1124,8 @@ $("#authenticateButton").on("click", function(event) {
 });
 
 
-var authCookie = getCookie("TwitchPlaysNintendoSwitch");
-var attemptedAuth = getCookie("AttemptedAuth");
+let authCookie = getCookie("TwitchPlaysNintendoSwitch");
+let attemptedAuth = getCookie("AttemptedAuth");
 
 // if (attemptedAuth && !authCookie) {
 // 	window.location.href = "https://twitchplaysnintendoswitch.com/8110/";
@@ -1148,22 +1147,22 @@ setInterval(function() {
 /* STREAM SETTINGS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
 
 $("#qualitySlider").on("input", function(event) {
-	var quality = this.value;
+	let quality = this.value;
 	$("#quality").text(quality);
 	socket.emit("setQuality", parseInt(quality));
 })
 $("#scaleSlider").on("input", function(event) {
-	var scale = this.value;
+	let scale = this.value;
 	$("#scale").text(scale);
 	socket.emit("setScale", parseInt(scale));
 })
 $("#fpsSlider").on("input", function(event) {
-	var fps = this.value;
+	let fps = this.value;
 	$("#fps").text(fps);
 	// 		socket.emit("setFPS", parseInt(fps));
 })
 $("#thresholdSlider").on("input", function(event) {
-	var threshold = this.value;
+	let threshold = this.value;
 	$("#threshold").text(threshold);
 })
 
@@ -1185,19 +1184,22 @@ socket.on("setFPS", function(data) {
 /* LAGLESS 2.0 */
 // Setup the WebSocket connection and start the player
 
-var client = new WebSocket( "wss://twitchplaysnintendoswitch2.localtunnel.me/ws" );
-//var client = new WebSocket( "wss://twitchplaysnintendoswitch.com/3000/ws" );
-var loadingImage = "https://twitchplaysnintendoswitch.com/images/loading.png";
-var canvas2 = document.getElementById("videoCanvas2");
-var player = new jsmpeg(client, {canvas:canvas2, poster: loadingImage});
+//let client = new WebSocket("wss://twitchplaysnintendoswitch2.localtunnel.me/ws");
+let client = new WebSocket("wss://twitchplaysnintendoswitch.com/8002/ws");
+let loadingImage = "https://twitchplaysnintendoswitch.com/images/loading.png";
+let canvas2 = document.getElementById("videoCanvas2");
+let player = new jsmpeg(client, {canvas:canvas2, poster: loadingImage});
 player.pause2();
+player.stats = stats;
 
 
 /* LAGLESS 3.0 */
-var canvas = document.getElementById("videoCanvas3");
+let canvas3 = document.getElementById("videoCanvas3");
 // Create h264 player
-var uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
-var wsavc = new WSAvcPlayer(canvas, "webgl", 1, 35);
+// let uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
+let uri = "wss://twitchplaysnintendoswitch.com/8003/";
+let wsavc = new WSAvcPlayer(canvas3, "webgl", 1, 35);
+wsavc.stats = stats;
 
 
 
@@ -1212,8 +1214,8 @@ getLatestImage();
 
 $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 
-	var tab = $(e.target);
-	var contentId = tab.attr("href");
+	let tab = $(e.target);
+	let contentId = tab.attr("href");
 
 	//This check if the tab is active
 	if (tab.parent().hasClass("active")) {
@@ -1234,7 +1236,8 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 		}
 		
 		if (contentId == "#lagless3") {
-			var uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
+			//let uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
+			let uri = "wss://twitchplaysnintendoswitch.com/8003/";
 			wsavc.connect(uri);
 		} else {
 			try {
@@ -1249,7 +1252,7 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 
 
 /* AUDIO */
-// 	var webrtc = new SimpleWebRTC({
+// 	let webrtc = new SimpleWebRTC({
 //         media: {
 //             audio: true,
 //             video: false
@@ -1288,36 +1291,36 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 
 
 /* NEW AUDIO @@@@@@@@@@@@@@@@ */
-var hash = window.location.hash.replace('#', '');
-var meeting = new Meeting(hash);
-var remoteMediaStreams = document.getElementById('remote-media-streams');
-var localMediaStream = document.getElementById('local-media-stream');
-var channel = "#twitchplaysnintendoswitch";
-var sender = Math.round(Math.random() * 999999999) + 999999999;
-var socket2 = io("https://twitchplaysnintendoswitch.com", {
+let hash = window.location.hash.replace("#", "");
+let meeting = new Meeting(hash);
+let remoteMediaStreams = document.getElementById("remote-media-streams");
+let localMediaStream = document.getElementById("local-media-stream");
+let channel = "#twitchplaysnintendoswitch";
+let sender = Math.round(Math.random() * 999999999) + 999999999;
+let socket2 = io("https://twitchplaysnintendoswitch.com", {
 	path: "/8110/socket.io/",
-	transports: ['websocket'] // added
+	transports: ["websocket"],
 });
-socket2.emit('new-channel', {
+socket2.emit("new-channel", {
 	channel: channel,
 	sender: sender
 });
 //socket = io.connect(SIGNALING_SERVER + channel);
 io.connect("https://twitchplaysnintendoswitch.com", {
 	path: "/8110/socket.io/",
-	transports: ['websocket'] // added
+	transports: ["websocket"] // added
 });
-socket2.on('connect', function() {
+socket2.on("connect", function() {
 	// setup peer connection & pass socket object over the constructor!
 });
 socket2.send = function(message) {
-	socket.emit('message', {
+	socket.emit("message", {
 		sender: sender,
 		data: message
 	});
 };
 meeting.openSignalingChannel = function(callback) {
-	return socket.on('message', callback);
+	return socket.on("message", callback);
 };
 // on getting media stream
 meeting.onaddstream = function(e) {
@@ -1326,7 +1329,7 @@ meeting.onaddstream = function(e) {
 meeting.firebase = "rtcweb";
 // if someone leaves; just remove his audio
 meeting.onuserleft = function(userid) {
-	var audio = document.getElementById(userid);
+	let audio = document.getElementById(userid);
 	if (audio) audio.parentNode.removeChild(audio);
 };
 // check pre-created meeting rooms
@@ -1336,12 +1339,12 @@ meeting.check();
 $("#toggleAudio").on("click", function() {
 	toggleAudio = !toggleAudio;
 	if (toggleAudio) {
-		var icon = $(".fa-volume-off");
+		let icon = $(".fa-volume-off");
 		icon.removeClass("fa-volume-off");
 		icon.addClass("fa-volume-up");
 		audioElem.play();
 	} else {
-		var icon = $(".fa-volume-up");
+		let icon = $(".fa-volume-up");
 		icon.removeClass("fa-volume-up");
 		icon.addClass("fa-volume-off");
 		audioElem.pause();
@@ -1354,9 +1357,9 @@ socket.on("controlQueue", function(data) {
 	controlQueue = data.queue;
 	$("#controlQueue").empty();
 	
-	for (var i = 0; i < controlQueue.length; i++) {
-		var username = controlQueue[i];
-		var html;
+	for (let i = 0; i < controlQueue.length; i++) {
+		let username = controlQueue[i];
+		let html;
 		if (!toggleDarkTheme) {
 			html = "<li class='list-group-item'>" + username + "</li>";
 		} else {
@@ -1375,21 +1378,21 @@ socket.on("turnTimeLeft", function(data) {
 	turnUsername = data.username;
 	turnLength = data.turnLength;
 	lastCurrentTime = Date.now();
-	var timeLeftMilli = timeLeft;
-	var timeLeftSec = parseInt(timeLeft / 1000);
-	var percent = parseInt((timeLeftMilli / turnLength) * 100);
-	var progressBar = $(".progress-bar");
+	let timeLeftMilli = timeLeft;
+	let timeLeftSec = parseInt(timeLeft / 1000);
+	let percent = parseInt((timeLeftMilli / turnLength) * 100);
+	let progressBar = $(".progress-bar");
 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(data.username + ": " + timeLeftSec + " seconds");
 });
 
 
 setInterval(function() {
-	var currentTime = Date.now();
-	var elapsedTime = currentTime - lastCurrentTime;
-	var timeLeftMilli = timeLeft - elapsedTime;
-	var timeLeftSec = parseInt(timeLeftMilli / 1000);
-	var percent = parseInt((timeLeftMilli / turnLength) * 100);
-	var progressBar = $(".progress-bar");
+	let currentTime = Date.now();
+	let elapsedTime = currentTime - lastCurrentTime;
+	let timeLeftMilli = timeLeft - elapsedTime;
+	let timeLeftSec = parseInt(timeLeftMilli / 1000);
+	let percent = parseInt((timeLeftMilli / turnLength) * 100);
+	let progressBar = $(".progress-bar");
 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(turnUsername + ": " + timeLeftSec + " seconds");
 }, 200);
 
@@ -1411,7 +1414,7 @@ $("#cancelTurn").on("click", function(event) {
 $("#toggleTheme").on("click", function() {
 	toggleDarkTheme = !toggleDarkTheme;
 	if (toggleDarkTheme) {
-		var icon = $(".glyphicon-fire");
+		let icon = $(".glyphicon-fire");
 		icon.removeClass("glyphicon-fire");
 		icon.addClass("glyphicon-certificate");
 		
@@ -1447,7 +1450,7 @@ $("#toggleTheme").on("click", function() {
 // 		$("::-webkit-resizer").css("background-color: #666;");
 		
 	} else {
-		var icon = $(".glyphicon-certificate");
+		let icon = $(".glyphicon-certificate");
 		icon.removeClass("glyphicon-certificate");
 		icon.addClass("glyphicon-fire");
 		
@@ -1482,6 +1485,34 @@ $("#toggleChat").on("click", function() {
 	
 });
 
+/* MOBILE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+// check if on mobile, if so, change to tab2
+let isMobile = false; //initiate as false
+// device detection
+if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) { 
+    isMobile = true;
+}
+if (isMobile) {
+	//alert("mobile device");
+	$("#tab2").trigger("click");
+}
+
+
+
+/* CONTROLLER VIEW @@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+let controllerCanvas = document.getElementById("controllerViewCanvas");
+let controllerCtx = controllerCanvas.getContext("2d");
+controllerCanvas.width = 1500;
+controllerCanvas.height = 1045;
+
+let img = new Image();
+img.onload = function() {
+	let width = controllerCanvas.width;
+	let height = controllerCanvas.height;
+	let ratio = (img.height / img.width);
+	controllerCtx.drawImage(img, 0, 0, width * ratio, height);
+};
+img.src = "https://twitchplaysnintendoswitch.com/images/procontroller.png";
 
 
 

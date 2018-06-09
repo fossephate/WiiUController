@@ -4436,6 +4436,9 @@ var WSAvcPlayer = new Class({
     var framesList = [];
 
     this.ws.onmessage = (evt) => {
+	  if (typeof this.stats != "undefined") {
+		  this.stats.begin();
+	  }
       if(typeof evt.data == "string")
         return this.cmd(JSON.parse(evt.data));
 
@@ -4444,6 +4447,9 @@ var WSAvcPlayer = new Class({
       //log("[Pkt " + this.pktnum + " (" + evt.data.byteLength + " bytes)]");
       //this.decode(frame);
       framesList.push(frame);
+	  if (typeof this.stats != "undefined") {
+		  this.stats.end();
+	  }
     };
 
 

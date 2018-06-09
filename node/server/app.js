@@ -1,18 +1,34 @@
-var express = require("express");
-var app = express();
-var server = require("http").createServer(app);
-var io = require("socket.io")(server);
-var config = require("./config.js");
-//var port = process.env.PORT || 8110;
-var port = 8110;
-//var port = 3000;
+const express = require("express");
+const app = express();
+const server = require("http").createServer(app);
+const io = require("socket.io")(server);
+const config = require("./config.js");
+const port = 8110;
 
-var crypto = require("crypto");
+const crypto = require("crypto");
 const storage = require("node-persist");
 const util = require("util");
+const fs = require("fs");
 
-const WebSocketServer = require('ws').Server;
-const Splitter        = require('stream-split');
+// const PeerServer = require("peer").PeerServer;
+// var peerServer = PeerServer({
+// 	port: 8004,
+// 	path: "/twitchplays",
+// 	ssl: {
+// 		// need sudo :/
+// 		key: fs.readFileSync("/etc/letsencrypt/live/twitchplaysnintendoswitch.com/privkey.pem"),
+// 		cert: fs.readFileSync("/etc/letsencrypt/live/twitchplaysnintendoswitch.com/fullchain.pem"),
+// 	},
+// });
+
+// Find out which user used sudo through the environment variable
+// var uid = parseInt(process.env.SUDO_UID);
+// // Set our server's uid to that user
+// if (uid) process.setuid(uid);
+// console.log('Server\'s UID is now ' + process.getuid());
+
+const WebSocketServer = require("ws").Server;
+const Splitter        = require("stream-split");
 const NALseparator    = new Buffer([0,0,0,1]);//NAL break
 
 
@@ -41,11 +57,11 @@ var streamSettings = {
 var lastImage = "";
 
 
-var session = require('express-session');
-var passport = require('passport');
-var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
-var request = require('request');
-var handlebars = require('handlebars');
+var session = require("express-session");
+var passport = require("passport");
+var OAuth2Strategy = require("passport-oauth").OAuth2Strategy;
+var request = require("request");
+var handlebars = require("handlebars");
 
 const TWITCH_CLIENT_ID = "mxpjdvl0ymc6nrm4ogna0rgpuplkeo";
 const TWITCH_SECRET = config.TWITCH_SECRET;
@@ -158,7 +174,7 @@ app.get("/", function(req, res) {
 		});
 		res.send(template(req.session.passport.user));
 	} else {
-		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
+		res.send(`<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>`);
 	}
 });
 
@@ -166,19 +182,18 @@ app.get("/", function(req, res) {
 app.get("/stats/", function(req, res) {
 // 	if (req.session && req.session.passport && req.session.passport.user) {
 // 		console.log(req.session.passport.user);
-// 		res.cookie('TwitchPlaysNintendoSwitch', req.session.passport.user.display_name, {
+// 		res.cookie("TwitchPlaysNintendoSwitch", req.session.passport.user.display_name, {
 // 			maxAge: 900000
 // 		});
 // 		res.send(template(req.session.passport.user));
 // 	} else {
-// 		res.send('<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>');
+// 		res.send(`<html><head><title>Twitch Auth Sample</title></head><a href="/8110/auth/twitch"><img src="http://ttv-api.s3.amazonaws.com/assets/connect_dark.png"></a></html>`);
 // 	}
 });
 
 app.get("/img/", function(req, res) {
 	var imgSrc = "data:image/jpeg;base64," + lastImage;
-	var html = "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>";
-	//var html = "<img id='screenshot' style='width: 100%; height: auto;' src='" + imgSrc + "'>" + "<script>setTimeout(function(){location.reload()}, 1000/15);</script>";
+	var html = '<img id="screenshot" style="width: 100%; height: auto;" src="' + imgSrc + '">';
 	res.send(html);
 });
 
@@ -249,8 +264,8 @@ console.log(util.inspect(usernameDB, false, null));
 
 /*
 	// for client side
-	socket = io('http://fosse.co', {
-		path: '/8100/socket.io'
+	socket = io("http://fosse.co", {
+		path: "/8100/socket.io"
 	});
  */
 
@@ -268,10 +283,6 @@ function Client(socket) {
 		objectToSend.q = q;
 		io.to(this.id).emit("ss", objectToSend);
 	};
-
-	this.ping = function() {
-		io.to(this.id).emit("ping2");
-	}
 
 	this.getImage2 = function(x1, y1, x2, y2, q) {
 		var objectToSend = {};
@@ -486,13 +497,15 @@ io.on("connection", function(socket) {
 			var client = clients[index];
 			obj.name = client.name;
 		}
-		for (var i = 0; i < clients.length; i++) {
-			var c = clients[i];
-			if (controller != null && c.id != controller.id) {
-				io.to(c.id).emit("viewImage", obj);
-			} else if (controller == null) {
-				io.emit("viewImage", obj);
+		if (controller != null) {
+			for (var i = 0; i < clients.length; i++) {
+				var c = clients[i];
+				if (c.id != controller.id) {
+					io.to(c.id).emit("viewImage", obj);
+				}
 			}
+		} else {
+			io.emit("viewImage", obj);
 		}
 
 	});
@@ -537,9 +550,7 @@ io.on("connection", function(socket) {
 		var index = findClientByID(socket.id);
 		var client = clients[index];
 
-		if (client.username == null) {
-			return;
-		}
+		if (client.username == null) {return;}
 		
 		if(controlQueue.length == 0) {return;}
 		currentTurnUsername = controlQueue[0];
@@ -591,6 +602,7 @@ io.on("connection", function(socket) {
 			socket.emit("controlQueue", {queue: controlQueue});
 		}
 	});
+	
 	socket.on("cancelTurn", function() {
 		var index = findClientByID(socket.id);
 		if (index == -1) {return;}
@@ -651,7 +663,7 @@ io.on("connection", function(socket) {
 		clients.splice(i, 1);
 	});
 
-	socket.on("setQuality", function(data) {
+	socket.on("setQuality", function(data) {co
 		
 		if(controlQueue.length == 0) {io.emit("setQuality", streamSettings.quality);return;}
 		currentTurnUsername = controlQueue[0];
@@ -714,7 +726,31 @@ io.on("connection", function(socket) {
 			delete channels[initiatorChannel];
 		}
 	});
-
+	
+	
+	/* AUDIO 2.0 @@@@@@@@@@@@@@@@@@@@@@@@ */
+	
+    socket.on("receive-audio", function (data) {
+		if (controller != null) {
+			for (var i = 0; i < clients.length; i++) {
+				var c = clients[i];
+				if (c.id != controller.id) {
+					io.to(c.id).emit("send-audio", data);
+				}
+			}
+		} else {
+			io.emit("send-audio", data);
+		}
+		
+    });
+	
+	
+	
+	/* LATENCY @@@@@@@@@@@@@@@@@@@@@@@@ */
+	socket.on("ping", function() {
+		socket.emit("pong");
+	});
+	
 });
 
 function onNewNamespace(channel, sender) {
@@ -728,7 +764,7 @@ function onNewNamespace(channel, sender) {
 		socket.on("message", function(data) {
 			if (data.sender == sender) {
 				if (!username) username = data.data.sender;
-				socket.broadcast.emit('message', data.data);
+				socket.broadcast.emit("message", data.data);
 			}
 		});
 		

@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
@@ -11,20 +10,7 @@
 </head>
 
 <body>
-<!-- 	<table style="border-left: 1px solid black; width: 100%;">
-		<tr>
-			<td>
-				<h2 style="display: block; text-align: center;">Local Media Stream</h2>
-				<section id="local-media-stream"></section>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<h2 style="display: block; text-align: center;">Remote Media Streams</h2>
-				<section id="remote-media-streams"></section>
-			</td>
-		</tr>
-	</table> -->
+	
 	<script>
 		var hash = window.location.hash.replace("#", "");
 		var meeting = new Meeting(hash);
@@ -66,7 +52,7 @@
 		};
 		// using firebase for signaling
 		meeting.firebase = "rtcweb";
-		// if someone leaves; just remove his audio
+		// if someone leaves; just remove their audio
 		meeting.onuserleft = function(userid) {
 			var audio = document.getElementById(userid);
 			if (audio) audio.parentNode.removeChild(audio);

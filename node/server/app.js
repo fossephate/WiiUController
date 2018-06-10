@@ -277,6 +277,7 @@ function Client(socket) {
 	this.username = null;
 
 	this.isController = false;
+	this.isController2 = false;
 
 	this.getImage = function(q) {
 		var objectToSend = {};
@@ -321,6 +322,7 @@ var twitch_subscribers = ["beanjr_yt", "fosseisanerd", "mrruidiazisthebestinsmo"
 var currentTurnUsername = null;
 var turnDuration = 30000;
 var controller = null;
+var controller2 = null;
 var restartAvailable = true;
 var turnStartTime = Date.now();
 
@@ -497,16 +499,17 @@ io.on("connection", function(socket) {
 			var client = clients[index];
 			obj.name = client.name;
 		}
-		if (controller != null) {
-			for (var i = 0; i < clients.length; i++) {
-				var c = clients[i];
-				if (c.id != controller.id) {
-					io.to(c.id).emit("viewImage", obj);
-				}
-			}
-		} else {
-			io.emit("viewImage", obj);
-		}
+// 		if (controller != null) {
+// 			for (var i = 0; i < clients.length; i++) {
+// 				var c = clients[i];
+// 				if (c.id != controller.id) {
+// 					io.to(c.id).emit("viewImage", obj);
+// 				}
+// 			}
+// 		} else {
+// 			io.emit("viewImage", obj);
+// 		}
+		io.to("viewers").emit("viewImage", obj);
 
 	});
 

@@ -4,6 +4,10 @@ let socket = io("https://twitchplaysnintendoswitch.com", {
 	transports: ["websocket"],
 });
 
+socket.on("connection", function(socket){
+	socket.join("viewers");
+});
+
 let globalEventTimer = false;
 let keyboardTimer;
 let gamepadTimer;
@@ -1180,16 +1184,14 @@ socket.on("setFPS", function(data) {
 	$("#fpsSlider").val(data);
 });
 
-
+/* LAGLESS 1.0*/
+getLatestImage();
 
 /* LAGLESS 2.0 */
 // Setup the WebSocket connection and start the player
-
-//let client = new WebSocket("wss://twitchplaysnintendoswitch2.localtunnel.me/ws");
 let client = new WebSocket("wss://twitchplaysnintendoswitch.com/8002/ws");
-let loadingImage = "https://twitchplaysnintendoswitch.com/images/loading.png";
 let canvas2 = document.getElementById("videoCanvas2");
-let player = new jsmpeg(client, {canvas:canvas2, poster: loadingImage});
+let player = new jsmpeg(client, {canvas:canvas2});
 player.pause2();
 player.stats = stats;
 
@@ -1202,8 +1204,17 @@ let uri = "wss://twitchplaysnintendoswitch.com/8003/";
 let wsavc = new WSAvcPlayer(canvas3, "webgl", 1, 35);
 wsavc.stats = stats;
 
-getLatestImage();
 
+
+
+
+/* LAGLESS 2.0 3DS*/
+// Setup the WebSocket connection and start the player
+// let client2 = new WebSocket("wss://twitchplaysnintendoswitch.com/8004/ws");
+// let canvas4 = document.getElementById("videoCanvas4");
+// let player2 = new jsmpeg(client2, {canvas:canvas4});
+// player2.pause2();
+// player2.stats = stats;
 
 
 
@@ -1310,9 +1321,13 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 		
 		// lagless 2:
 		if (contentId == "#lagless2") {
-			player.play2();
+			if (typeof player != "undefined") {
+				player.play2();
+			}
 		} else {
-			player.pause2();
+			if (typeof player != "undefined") {
+				player.pause2();
+			}
 		}
 		
 		// lagless 3:
@@ -1324,6 +1339,17 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 			try {
 				wsavc.disconnect();
 			} catch(error) {
+			}
+		}
+		
+		// lagless 4:
+		if (contentId == "#lagless4") {
+			if (typeof player2 != "undefined") {
+				player2.play2();
+			}
+		} else {
+			if (typeof player2 != "undefined") {
+				player2.pause2();
 			}
 		}
 

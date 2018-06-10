@@ -18,6 +18,7 @@ let timeLeft = 30000;
 let turnLength = 30000;
 let turnUsername = null;
 let lastCurrentTime = 0;
+let pingTime = 0;
 let stats = new Stats();
 stats.showPanel(0);// 0: fps, 1: ms, 2: mb, 3+: custom
 document.body.appendChild(stats.dom);
@@ -91,7 +92,7 @@ function updateImage() {
 	$("#screen").load("/8110/img/ #screenshot");
 	if (typeof $("#screen")[0].children[0] != "undefined") {
 		// fix for dom freaking out:
-		$("#metaScreen")[0].style.height = "" + $("#screenshot")[0].height;
+		$("#screen")[0].style.height = "" + $("#screenshot")[0].height;
 		
 		let src = $("#screen")[0].children[0].src;
 		if(src == "data:image/jpeg;base64,") {
@@ -1201,13 +1202,89 @@ let uri = "wss://twitchplaysnintendoswitch.com/8003/";
 let wsavc = new WSAvcPlayer(canvas3, "webgl", 1, 35);
 wsavc.stats = stats;
 
-
-
-
-
-
-
 getLatestImage();
+
+
+
+
+
+/* RESIZALBLE */
+// interact("#screen")
+// 	.resizable({
+//     // resize from all edges and corners
+//     edges: { left: true, right: true, bottom: true, top: true },
+//     // keep the edges inside the parent
+//     restrictEdges: {
+//       outer: "parent",
+//       endOnly: true,
+//     },
+//     // minimum size
+//     restrictSize: {
+//       min: { width: 100, height: 50 },
+//     },
+// 	preserveAspectRatio: true,
+//     inertia: true,
+//   })
+//   .on("resizemove", function (event) {
+//     var target = event.target,
+//         x = (parseFloat(target.getAttribute("data-x")) || 0),
+//         y = (parseFloat(target.getAttribute("data-y")) || 0);
+
+//     // update the element's style
+//     target.style.width  = event.rect.width + "px";
+//     target.style.height = event.rect.height + "px";
+//   });
+// interact("#videoCanvas2")
+// 	.resizable({
+//     // resize from all edges and corners
+//     edges: { left: true, right: true, bottom: true, top: true },
+//     // keep the edges inside the parent
+//     restrictEdges: {
+//       outer: "parent",
+//       endOnly: true,
+//     },
+//     // minimum size
+//     restrictSize: {
+//       min: { width: 100, height: 50 },
+//     },
+// 	preserveAspectRatio: true,
+//     inertia: true,
+//   })
+//   .on("resizemove", function (event) {
+//     var target = event.target,
+//         x = (parseFloat(target.getAttribute("data-x")) || 0),
+//         y = (parseFloat(target.getAttribute("data-y")) || 0);
+
+//     // update the element's style
+//     target.style.width  = event.rect.width + "px";
+//     target.style.height = event.rect.height + "px";
+//   });
+// interact("#videoCanvas3")
+// 	.resizable({
+//     // resize from all edges and corners
+//     edges: { left: true, right: true, bottom: true, top: true },
+//     // keep the edges inside the parent
+//     restrictEdges: {
+//       outer: "parent",
+//       endOnly: true,
+//     },
+//     // minimum size
+//     restrictSize: {
+//       min: { width: 100, height: 50 },
+//     },
+// 	preserveAspectRatio: true,
+//     inertia: true,
+//   })
+//   .on("resizemove", function (event) {
+//     var target = event.target,
+//         x = (parseFloat(target.getAttribute("data-x")) || 0),
+//         y = (parseFloat(target.getAttribute("data-y")) || 0);
+
+//     // update the element's style
+//     target.style.width  = event.rect.width + "px";
+//     target.style.height = event.rect.height + "px";
+//   });
+
 
 
 /* SWITCH IMPLEMENTATIONS */
@@ -1219,8 +1296,10 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 
 	//This check if the tab is active
 	if (tab.parent().hasClass("active")) {
-		console.log("the tab with the content id " + contentId + " is visible");
-
+		
+		//console.log("the tab with the content id " + contentId + " is visible");
+		
+		// lagless 1:
 		if (contentId == "#lagless1") {
 			//$("#screen").append("<img id='screenshot'></img>")
 			lagless1Break = false;
@@ -1229,12 +1308,14 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 			lagless1Break = true;
 		}
 		
+		// lagless 2:
 		if (contentId == "#lagless2") {
 			player.play2();
 		} else {
 			player.pause2();
 		}
 		
+		// lagless 3:
 		if (contentId == "#lagless3") {
 			//let uri = "wss://twitchplaysnintendoswitch3.localtunnel.me";
 			let uri = "wss://twitchplaysnintendoswitch.com/8003/";
@@ -1249,45 +1330,6 @@ $(document).on("shown.bs.tab", 'a[data-toggle="tab"]', function(e) {
 	} else {}
 
 });
-
-
-/* AUDIO */
-// 	let webrtc = new SimpleWebRTC({
-//         media: {
-//             audio: true,
-//             video: false
-//         },
-// 		// immediately ask for camera access
-// 		//autoRequestMedia: true
-// 	});
-// 	// we have to wait until it's ready
-// 	// doesn't want to work
-// // 	webrtc.on("readyToCall", function() {
-// // 		// you can name it anything
-// // 		webrtc.joinRoom("TwitchPlaysNintendoSwitch");
-// // 		console.log("joining");
-// // 	});
-
-// 	// just wait 2 seconds:
-// 	setTimeout(function() {
-// 		webrtc.joinRoom("TwitchPlaysNintendoSwitch");
-// 		console.log("joining");
-// 	}, 2000);
-
-
-//     $("#toggleAudio").on("click", function() {
-
-// 		toggleAudio = !toggleAudio;
-
-// 		if(toggleAudio) {
-// 			webrtc.joinRoom("TwitchPlaysNintendoSwitch");
-// 			console.log("joining");
-// 		} else {
-// 			webrtc.leaveRoom();
-// 			console.log("leaving");
-// 		}
-
-//     });
 
 
 /* NEW AUDIO @@@@@@@@@@@@@@@@ */
@@ -1327,7 +1369,7 @@ meeting.onaddstream = function(e) {
 };
 // using firebase for signaling
 meeting.firebase = "rtcweb";
-// if someone leaves; just remove his audio
+// if someone leaves; just remove their audio
 meeting.onuserleft = function(userid) {
 	let audio = document.getElementById(userid);
 	if (audio) audio.parentNode.removeChild(audio);
@@ -1386,15 +1428,15 @@ socket.on("turnTimeLeft", function(data) {
 });
 
 
-setInterval(function() {
-	let currentTime = Date.now();
-	let elapsedTime = currentTime - lastCurrentTime;
-	let timeLeftMilli = timeLeft - elapsedTime;
-	let timeLeftSec = parseInt(timeLeftMilli / 1000);
-	let percent = parseInt((timeLeftMilli / turnLength) * 100);
-	let progressBar = $(".progress-bar");
-	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(turnUsername + ": " + timeLeftSec + " seconds");
-}, 200);
+// setInterval(function() {
+// 	let currentTime = Date.now();
+// 	let elapsedTime = currentTime - lastCurrentTime;
+// 	let timeLeftMilli = timeLeft - elapsedTime;
+// 	let timeLeftSec = parseInt(timeLeftMilli / 1000);
+// 	let percent = parseInt((timeLeftMilli / turnLength) * 100);
+// 	let progressBar = $(".progress-bar");
+// 	progressBar.css("width", percent + "%").attr("aria-valuenow", percent + "%").text(turnUsername + ": " + timeLeftSec + " seconds");
+// }, 200);
 
 $("#requestTurn").on("click", function(event) {
 	socket.emit("requestTurn");
@@ -1492,10 +1534,11 @@ let isMobile = false; //initiate as false
 if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(navigator.userAgent) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(navigator.userAgent.substr(0,4))) { 
     isMobile = true;
 }
-if (isMobile) {
-	//alert("mobile device");
-	$("#tab2").trigger("click");
-}
+// if (isMobile) {
+// 	$("#tab2").trigger("click");
+// }
+// default:
+$("#tab2").trigger("click");
 
 
 
@@ -1515,4 +1558,16 @@ img.onload = function() {
 img.src = "https://twitchplaysnintendoswitch.com/images/procontroller.png";
 
 
+
+
+/* PING @@@@@@@@@@@@@@@@@@@@@@@@@@@@*/
+setInterval(function() {
+	pingTime = Date.now();
+	socket.emit("ping2");
+}, 1000);
+
+socket.on("pong2", function() {
+	let latency = Date.now() - pingTime;
+	$("#ping").text(latency + "ms");
+});
 

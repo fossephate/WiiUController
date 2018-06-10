@@ -193,7 +193,7 @@ app.get("/stats/", function(req, res) {
 
 app.get("/img/", function(req, res) {
 	var imgSrc = "data:image/jpeg;base64," + lastImage;
-	var html = '<img id="screenshot" style="width: 100%; height: auto;" src="' + imgSrc + '">';
+	var html = '<img id="screenshot" src="' + imgSrc + '">';
 	res.send(html);
 });
 
@@ -649,7 +649,7 @@ io.on("connection", function(socket) {
 		}
 	});
 	
-	socket.on("serverRestart", function() {
+	socket.on("restart server", function() {
 		restartAvailable = false;
 		console.log("server restarting");
 		io.emit("quit");
@@ -741,14 +741,39 @@ io.on("connection", function(socket) {
 		} else {
 			io.emit("send-audio", data);
 		}
-		
+    });
+	
+	socket.on("client-signal", function (data) {
+		if (controller != null) {
+			for (var i = 0; i < clients.length; i++) {
+				var c = clients[i];
+				if (c.id != controller.id) {
+					io.to(c.id).emit("client-signal", data);
+				}
+			}
+		} else {
+			io.emit("client-signal", data);
+		}
+    });
+	
+	socket.on("host-signal", function (data) {
+		if (controller != null) {
+			for (var i = 0; i < clients.length; i++) {
+				var c = clients[i];
+				if (c.id != controller.id) {
+					io.to(c.id).emit("host-signal", data);
+				}
+			}
+		} else {
+			io.emit("host-signal", data);
+		}
     });
 	
 	
 	
 	/* LATENCY @@@@@@@@@@@@@@@@@@@@@@@@ */
-	socket.on("ping", function() {
-		socket.emit("pong");
+	socket.on("ping2", function() {
+		socket.emit("pong2");
 	});
 	
 });

@@ -30,39 +30,47 @@
 			transports: ["websocket"],
 		});
 		
-		var p = new SimplePeer({
+		var peer = new SimplePeer({
 			initiator: false,
 			trickle: false,
 		});
+		
 
-		p.on("error", function(err) {
-			console.log("error", err)
-		});
-
-		p.on("signal", function(data) {
+		peer.on("signal", function(data) {
+			// get this to the host:
+			socket.emit("client-signal", data);
 			console.log("SIGNAL", JSON.stringify(data));
-			document.querySelector("#outgoing").textContent = JSON.stringify(data);
+// 			document.querySelector("#outgoing").textContent = JSON.stringify(data);
 		});
 		
-		p.on("stream", function (stream) {
+		peer.on("stream", function (stream) {
 			// got remote video stream, now let's show it in a video tag
 // 			var audio = document.querySelector("video");
 			audio.src = window.URL.createObjectURL(stream);
 			audio.play();
 		});
 
-		document.querySelector("form").addEventListener("submit", function(ev) {
-			ev.preventDefault();
-			p.signal(JSON.parse(document.querySelector("#incoming").value));
+// 		document.querySelector("form").addEventListener("submit", function(ev) {
+// 			ev.preventDefault();
+// 			peer.signal(JSON.parse(document.querySelector("#incoming").value));
+// 		});
+		
+		socket.on("host-signal", function(data) {
+			peer.signal(data);
 		});
 
-		p.on("connect", function() {
+		peer.on("connect", function() {
 			console.log("CONNECT");
-			p.send("whatever" + Math.random());
+			peer.send("whatever" + Math.random());
 		});
 
-		p.on("data", function(data) {
+		peer.on("data", function(data) {
 			console.log("data: " + data);
+		});
+		
+		
+		peer.on("error", function(err) {
+			console.log("error", err)
 		});
 		
 

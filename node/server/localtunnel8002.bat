@@ -1,2 +1,2 @@
-lt-win.exe -s twitchplaysnintendoswitch2 -p 8002
-localtunnel8002.bat
+lt -s twitchplaysnintendoswitch2 -p 8002
+start localtunnel8002.bat

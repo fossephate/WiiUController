@@ -241,7 +241,7 @@ mainstart:
 		steady_clock::duration time_span = clock_end - clock_begin;
 		double nseconds = double(time_span.count()) * steady_clock::period::num / steady_clock::period::den;
 
-		std::cout << nseconds << " seconds." << std::endl;
+		//std::cout << nseconds << " seconds." << std::endl;
 		
 		if (nseconds > 600) {
 			exit(0);

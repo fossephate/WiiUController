@@ -1,4 +1,4 @@
-jsmpeg-vnc.exe -b 4500 -c 320,40,1280,720 -s 640x360 -f 15 -i 0 -p 8002 "OBS"
+jsmpeg-vnc.exe -b 4500 -c 320,40,1280,720 -s 640x360 -f 20 -i 0 -p 8002 "OBS"
 
 
 REM jsmpeg-vnc.exe -b 4500 -s 640x360 -f 15 -i 0 -p 8002 "inputlag"

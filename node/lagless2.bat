@@ -1,5 +1,4 @@
-cd server
-start localtunnel8002.bat
-cd ..
+cd /D "%~dp0"
 cd jsmpeg-vnc-v0.2
+title lagless2
 launch.bat

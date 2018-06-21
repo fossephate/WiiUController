@@ -25,7 +25,7 @@ class FFMpegServer extends Server {
         '-pix_fmt',  'yuv420p',
         '-preset',  'ultrafast',
         '-crf',  this.options.crf,
-        '-b:v', '5M',
+        '-b:v', '4M',
         '-bufsize', '8000k',
         '-maxrate', '6000k',
         '-c:v',  'libx264',

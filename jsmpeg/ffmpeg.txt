@@ -1,0 +1,32 @@
+        "-f", "gdigrab",
+        "-framerate", this.options.fps,
+        "-offset_x", this.options.x, 
+        "-offset_y", this.options.y, 
+        "-video_size", this.options.width + 'x' + this.options.height,
+        '-i',  'desktop', 
+        '-pix_fmt',  'yuv420p',
+        '-preset',  'ultrafast',
+        '-crf',  this.options.crf,
+        '-b:v', '5M',
+        '-bufsize', '8000k',
+        '-maxrate', '6000k',
+        '-c:v',  'libx264',
+        '-vprofile', 'baseline',
+        '-tune', 'zerolatency',
+        '-f' ,'rawvideo',
+
+
+
+ffmpeg -f mpegts -framerate 15 -offset_x -1600 -offset_y 61 -video_size 1280x720 -i desktop -pix_fmt yuv420p -preset ultrafast -crf 30 -b:v 5M -bufsize 8000k -maxrate 6000k -c:v libx264 -vprofile baseline -tune zerolatency -codec:v mpeg1video http://localhost:8080/1234
+
+
+ffmpeg -f gdigrab -framerate 20 -offset_x -1600 -offset_y 61 -video_size 1280x720 -i desktop -b:v 1M -codec:v mpeg1video -f mpegts http://localhost:8080/supersecret
+
+
+audio:
+ffmpeg -f alsa -ar 44100 -c 2 -i audio="Line 1 (Virtual Audio Cable)" -f mpegts -codec:a mp2 -b:a 128k -muxdelay 0.001 http://localhost:8081/supersecret
+
+ffmpeg -f dshow -ar 44100 -i audio="Line 1 (Virtual Audio Cable)" -f mpegts -codec:a mp2 -b:a 128k -muxdelay 0.001 http://localhost:8081/supersecret
+
+
+ffmpeg -f dshow -list_options true -i audio="Microphone (Realtek HD Audio Input"

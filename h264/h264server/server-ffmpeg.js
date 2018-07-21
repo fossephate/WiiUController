@@ -19,17 +19,12 @@ io.on("connection", function(socket) {
 
 
 
-const WebStreamerServer = require("./lib/ffmpeg");
-
+const WebStreamerServer = require("./ffmpeg");
 const app  = express();
-
-//public website
-app.use(express.static(__dirname + "/public"));
-app.use(express.static(__dirname + "/vendor/dist"));
 
 
 const server  = http.createServer(app);
-const silence = new WebStreamerServer(server, {
+const videoServer = new WebStreamerServer(server, {
 	fps: 15,
 	width : 1280,
 	height: 720,
@@ -38,18 +33,14 @@ const silence = new WebStreamerServer(server, {
 	scalex: 1280,
 	scaley: 720,
 	crf: 30,
+	videoBitrate: "2M",
 });
 
-// const silence = new WebStreamerServer(server, {
-// 	fps: 20,
-// 	width : 640,
-// 	height: 360,
-// 	x: 640-1920,
-// 	y: 61,
-// 	scalex: 640,
-// 	scaley: 360,
-// });
+videoServer.start_feed();
 
-silence.start_feed();
+setInterval(function() {
+	//videoServer.restart_feed();
+}, 15000);
 
 server.listen(8003);
+//server.listen(8009);

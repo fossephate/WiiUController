@@ -1,0 +1,1 @@
+ffmpeg -f dshow -ar 44100 -i audio="Line 1 (Virtual Audio Cable)" -f mpegts -codec:a mp2 -b:a 128k -muxdelay 0.0001 http://localhost:8080/supersecret

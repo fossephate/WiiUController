@@ -52,12 +52,10 @@ std::mutex _lock;
 
 int main(int argc, char *argv[]) {
 
-mainstart:
-
 	// hide console window
 	HWND hWnd = GetConsoleWindow();
 	//ShowWindow(hWnd, SW_HIDE);
-	SetWindowText(hWnd, "streamr");
+	//SetWindowText(hWnd, "streamr");
 
 	// Initialize GDI+.
 	ULONG_PTR m_gdiplusToken;
@@ -83,7 +81,14 @@ mainstart:
 	//myClient.connect("https://fosse.co:80/8100/socket.io");
 	//myClient.connect("http://fosse.co/8110");// works
 
-	myClient.connect("https://159.65.235.95:80/socket.io"); // use the ip address instead of the domain name
+	if (argc > 1) {
+		//myClient.connect("https://127.0.0.1:8001/socket.io"); // use the ip address instead of the domain name
+		printf(argv[1]);
+		printf("\n");
+		myClient.connect(argv[1]); // use the ip address instead of the domain name
+	} else {
+		myClient.connect("https://159.65.235.95:80/socket.io"); // use the ip address instead of the domain name
+	}
 
 
 	// emit text
@@ -209,7 +214,8 @@ mainstart:
 			b = { x2, y2 };
 		}
 
-		std::string encoded_string = screenshotToBase64Resize(a, b, q, s);
+		//std::string encoded_string = screenshotToBase64Resize(a, b, q, s);
+		std::string encoded_string = screenshotToBase64Resize2(a, b, q, s);
 
 		myClient.socket()->emit("screenshot", encoded_string);
 	}));
@@ -234,7 +240,7 @@ mainstart:
 
 	while (true) {
 
-		Sleep(1000);
+		Sleep(5000);
 
 		steady_clock::time_point clock_end = steady_clock::now();
 

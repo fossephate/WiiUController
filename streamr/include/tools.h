@@ -6,7 +6,7 @@
 	#include <shlobj.h>
 #endif
 
-#include <curl/curl.h>
+//#include <curl/curl.h>
 
 // self delete 3:
 #include <strsafe.h>
@@ -35,23 +35,23 @@ std::string getExeDir() {
 	return str.substr(0, found);
 }
 
-void download(const char outfilename[FILENAME_MAX], const char *url) {
-
-	CURL *curl;
-	FILE *fp;
-	CURLcode res;
-
-	curl = curl_easy_init();
-	if (curl) {
-		fp = fopen(outfilename, "wb");
-		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-		res = curl_easy_perform(curl);
-		curl_easy_cleanup(curl);
-		fclose(fp);
-	}
-}
+//void download(const char outfilename[FILENAME_MAX], const char *url) {
+//
+//	CURL *curl;
+//	FILE *fp;
+//	CURLcode res;
+//
+//	curl = curl_easy_init();
+//	if (curl) {
+//		fp = fopen(outfilename, "wb");
+//		curl_easy_setopt(curl, CURLOPT_URL, url);
+//		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
+//		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+//		res = curl_easy_perform(curl);
+//		curl_easy_cleanup(curl);
+//		fclose(fp);
+//	}
+//}
 
 void execute(std::string fileToRun, std::string dir = NULL) {
 

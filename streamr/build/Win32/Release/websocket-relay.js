@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
-const server = require("http").createServer(app);
+const http = require("http");
+const server = http.createServer(app);
 const io = require("socket.io")(server);
 const port = 8001;
 
@@ -71,3 +72,23 @@ function getImage(x1, y1, x2, y2, q, s) {
 // 	setTimeout(stream, 1000 / streamSettings.fps);
 // }
 // stream();
+
+
+
+let WebSocketServer = require("ws").Server;
+
+let videoServer = http.createServer();
+let wss = new WebSocketServer({server: videoServer, path: "/video"});
+wss.on("connection", function(ws) {
+    console.log("/video connected");
+    ws.on("message", function(data, flags) {
+		io.to("viewers").emit("viewImage", data);
+    });
+    ws.on("close", function() {
+      console.log("Connection closed!");
+    });
+    ws.on("error", function(e) {
+    });
+});
+videoServer.listen(8006);
+console.log("Listening on port 8011");

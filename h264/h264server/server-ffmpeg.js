@@ -2,19 +2,22 @@
 
 const http    = require("http");
 const express = require("express");
-const app2 = express();
-const server2 = require("http").createServer(app2);
-const io = require("socket.io")(server2);
-const port = 8005;
 
-server2.listen(port, function() {
-	console.log("Server listening at port %d", port);
+
+// for settings:
+let io = require("socket.io-client");
+let socket = io("https://twitchplaysnintendoswitch.com", {
+	path: "/8110/socket.io",
+	reconnect: true,
 });
-
-io.on("connection", function(socket) {
-	socket.on("restart lagless3", function() {
-		process.exit();
-	});
+socket.on("connect", function() {
+    socket.emit("join", "lagless3Host");
+    setInterval(function() {
+    	socket.emit("join", "lagless3Host");
+    }, 10000);
+});
+socket.on("restart", function() {
+	process.exit();
 });
 
 

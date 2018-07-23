@@ -1,5 +1,7 @@
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable:4996)
 #include "easywsclient.hpp"
-//#include "easywsclient.cpp" // <-- include only if you don't want compile separately
+#include "easywsclient.cpp" // <-- include only if you don't want compile separately
 #ifdef _WIN32
 #pragma comment( lib, "ws2_32" )
 #include <WinSock2.h>
@@ -19,7 +21,6 @@ void handle_message(const std::string & message)
 
 int main()
 {
-#ifdef _WIN32
     INT rc;
     WSADATA wsaData;
 
@@ -28,9 +29,8 @@ int main()
         printf("WSAStartup Failed.\n");
         return 1;
     }
-#endif
 
-    ws = WebSocket::from_url("ws://localhost:8126/foo");
+    ws = WebSocket::from_url("ws://127.0.0.1:8011/video");
     assert(ws);
     ws->send("goodbye");
     ws->send("hello");
@@ -39,8 +39,6 @@ int main()
       ws->dispatch(handle_message);
     }
     delete ws;
-#ifdef _WIN32
     WSACleanup();
-#endif
     return 0;
 }

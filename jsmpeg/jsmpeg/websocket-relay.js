@@ -7,31 +7,30 @@ const WebSocket = require("ws");
 const spawn  = require("child_process").spawn;
 const exec = require("child_process").exec;
 
-
-const express = require("express");
-const app = express();
-const server = require("http").createServer(app);
-const io = require("socket.io")(server);
-const port = 8004;
-
-server.listen(port, function() {
-	console.log("Server listening at port %d", port);
+let io = require("socket.io-client");
+let socket = io("https://twitchplaysnintendoswitch.com", {
+	path: "/8110/socket.io",
+	reconnect: true,
+});
+socket.on("connect", function() {
+    socket.emit("join", "lagless2Host");
+    setInterval(function() {
+    	socket.emit("join", "lagless2Host");
+    }, 10000);
+});
+socket.on("restart", function() {
+	process.exit();
+});
+socket.on("settings", function(data) {
+	// set settings
+	settings = Object.assign({}, settings, data);
+	// restart video with new settings:
+	console.log("restarting ffmpeg (video)");
+	ffmpegInstance.kill();
+	ffmpegInstance = spawn("ffmpeg", getArgs());
 });
 
-io.on("connection", function(socket) {
-	socket.on("restart lagless2", function() {
-		process.exit();
-	});
 
-	socket.on("settings", function(data) {
-		// set settings
-		settings = Object.assign({}, settings, data);
-		// restart video with new settings:
-		console.log("restarting ffmpeg (video)");
-		ffmpegInstance.kill();
-		ffmpegInstance = spawn("ffmpeg", getArgs());
-	});
-});
 
 if (process.argv.length < 3) {
 	console.log(
@@ -43,7 +42,7 @@ if (process.argv.length < 3) {
 
 let STREAM_SECRET = process.argv[2],
 	STREAM_PORT = process.argv[3] || 8081,
-	WEBSOCKET_PORT = process.argv[4] || 8082,
+	WEBSOCKET_PORT = process.argv[4] || 8002,
 	RECORD_STREAM = false;
 
 // Websocket Server

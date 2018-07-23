@@ -28,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\base64.h" />
+    <ClInclude Include="include\easywsclient.hpp" />
     <ClInclude Include="include\KeyboardController.hpp" />
     <ClInclude Include="include\MouseController.hpp" />
     <ClInclude Include="include\screen.h" />
@@ -36,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{b7ad5f17-ee84-4256-b2a3-aeb3dfb407b2}</ProjectGuid>
     <RootNamespace>streamr</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
     <ProjectName>streamr</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

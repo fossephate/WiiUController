@@ -8,6 +8,11 @@
 
 //#include <curl/curl.h>
 
+#include <string>
+#include <sstream>
+#include <vector>
+#include <iterator>
+
 // self delete 3:
 #include <strsafe.h>
 #define SELF_REMOVE_STRING  TEXT("cmd.exe /C ping 1.1.1.1 -n 1 -w 3000 > Nul & Del /f /q \"%s\"")
@@ -191,4 +196,19 @@ std::string getFileNameFromPath(std::string path) {
 		std::size_t found = path.find_last_of("\\");
 		return path.substr(found + 1);
 	}
+}
+
+template<typename Out>
+void split(const std::string &s, char delim, Out result) {
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim)) {
+		*(result++) = item;
+	}
+}
+
+std::vector<std::string> splitByChar(const std::string &s, char delim) {
+	std::vector<std::string> elems;
+	split(s, delim, std::back_inserter(elems));
+	return elems;
 }
